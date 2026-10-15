@@ -1,0 +1,212 @@
+:root {
+  --color-bg: #f5f3f7;
+  --color-card: #ffffff;
+  --color-text: #262230;
+  --color-text-muted: #6b6579;
+  --color-primary: #7b3fe4;
+  --color-primary-dark: #6529c9;
+  --color-border: #e3ddec;
+  --color-error: #c22e4c;
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--color-card);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 30px rgba(38, 34, 48, 0.08);
+  padding: 32px 28px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin: 0 0 8px;
+}
+
+h1 {
+  font-size: 22px;
+  margin: 0 0 12px;
+}
+
+.lead {
+  color: var(--color-text-muted);
+  font-size: 15px;
+  margin: 0 0 20px;
+}
+
+.tcle-box {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 16px;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #faf9fc;
+  font-size: 13.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 20px;
+}
+
+.tcle-box h2 {
+  font-size: 14px;
+  color: var(--color-text);
+  margin: 0 0 8px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.checkbox-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  border: none;
+  padding: 0;
+}
+
+.field > span,
+fieldset.field legend {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  font-size: 14px;
+  background: white;
+}
+
+.chip-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chip:has(input:checked) {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.btn {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 10px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.error-msg {
+  color: var(--color-error);
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.steps {
+  padding-left: 20px;
+  margin: 0 0 24px;
+  color: var(--color-text);
+  font-size: 14.5px;
+}
+
+.steps li {
+  margin-bottom: 14px;
+}
+
+.hint {
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+  margin-top: 14px;
+}
+
+#screen-code {
+  text-align: center;
+}
+
+#anonymous-code {
+  font-size: 40px;
+  letter-spacing: 0.04em;
+  color: var(--color-primary);
+  margin: 12px 0 20px;
+}
+
+.footer-note {
+  margin-top: 18px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
