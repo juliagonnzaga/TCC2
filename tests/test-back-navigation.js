@@ -90,8 +90,9 @@ async function runFlow(browser) {
   await page.fill("#rec-date", "2026-10-10");
   await page.fill("#rec-reason", "teste do botão voltar");
   await page.click("#submit-form button[type=submit]");
-  await page.waitForFunction(() => !document.getElementById("submit-error") || document.getElementById("submit-error").hidden);
-  await page.click("#btn-view-status");
+  // Com o modal de confirmação de envio, vai pro status pelo botão do modal.
+  await page.waitForSelector("#submit-success-modal:not([hidden])");
+  await page.click("#btn-modal-status");
   await page.waitForSelector("#screen-status:not([hidden])");
 
   // Tela 5 (status) -> Voltar -> deve cair em envio.

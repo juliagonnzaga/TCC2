@@ -51,12 +51,19 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   await page.screenshot({ path: "shot-4-submit.png" });
   await page.click('#submit-form button[type=submit]');
 
-  await page.waitForFunction(
-    () => document.getElementById("submit-progress").textContent.includes("Recomendação enviada")
-  );
+  // Modal de confirmação de envio (feedback após enviar)
+  await page.waitForSelector("#submit-success-modal:not([hidden])");
+  const modalMessage = await page.locator("#submit-success-message").innerText();
+  if (!modalMessage.includes("mais 2")) {
+    throw new Error(`Mensagem do modal de confirmação inesperada: "${modalMessage}"`);
+  }
+  if (await page.locator("#btn-modal-new").isHidden()) {
+    throw new Error("Botão 'Enviar nova recomendação' deveria aparecer no modal (ainda restam envios)");
+  }
 
-  // Screen 4 -> 5: status dos envios
-  await page.click("#btn-view-status");
+  // Screen 4 -> 5: status dos envios (via botão do modal)
+  await page.click("#btn-modal-status");
+  await page.waitForSelector("#submit-success-modal", { state: "hidden" });
   await page.waitForSelector("#screen-status:not([hidden])");
   await page.waitForSelector(".rec-item");
   const itemCount = await page.locator(".rec-item").count();

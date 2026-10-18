@@ -197,13 +197,8 @@ submitForm.addEventListener("submit", async (event) => {
     if (!res.ok) throw new Error(data.error || "Falha ao enviar a recomendação.");
 
     submitForm.reset();
-
-    if (data.remaining <= 0) {
-      await refreshStatus();
-      showScreen("status");
-    } else {
-      submitProgress.textContent = `Recomendação enviada! Você ainda pode enviar mais ${data.remaining} (até ${data.totalForParticipant + data.remaining} no total).`;
-    }
+    submitProgress.textContent = "Cole o link do post ou Reels que apareceu para você.";
+    showSubmitSuccessModal(data.remaining, data.totalForParticipant);
   } catch (err) {
     showError("submit-error", err.message);
   } finally {
@@ -213,6 +208,40 @@ submitForm.addEventListener("submit", async (event) => {
 });
 
 document.getElementById("btn-view-status").addEventListener("click", async () => {
+  await refreshStatus();
+  showScreen("status");
+});
+
+/* ---------- Modal de confirmação de envio ---------- */
+
+const submitSuccessModal = document.getElementById("submit-success-modal");
+const submitSuccessMessage = document.getElementById("submit-success-message");
+const btnModalNew = document.getElementById("btn-modal-new");
+
+function showSubmitSuccessModal(remaining, totalForParticipant) {
+  if (remaining > 0) {
+    submitSuccessMessage.textContent = `Você ainda pode enviar mais ${remaining} recomendação(ões), até ${totalForParticipant + remaining} no total.`;
+    btnModalNew.hidden = false;
+  } else {
+    submitSuccessMessage.textContent = "Você já enviou o máximo de 3 recomendações. Muito obrigada por participar!";
+    btnModalNew.hidden = true;
+  }
+  submitSuccessModal.hidden = false;
+}
+
+function hideSubmitSuccessModal() {
+  submitSuccessModal.hidden = true;
+}
+
+document.getElementById("btn-modal-close").addEventListener("click", hideSubmitSuccessModal);
+
+btnModalNew.addEventListener("click", () => {
+  hideSubmitSuccessModal();
+  document.getElementById("rec-link").focus();
+});
+
+document.getElementById("btn-modal-status").addEventListener("click", async () => {
+  hideSubmitSuccessModal();
   await refreshStatus();
   showScreen("status");
 });

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel da Pesquisadora</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="admin-body">
+
+  <!-- ===================== Login ===================== -->
+  <!-- User story: Sistema de Login da Pesquisadora -->
+  <main id="admin-screen-login" class="app-shell">
+    <div class="card">
+      <p class="eyebrow">Painel da pesquisadora</p>
+      <h1>Entrar</h1>
+      <form id="login-form">
+        <label class="field">
+          <span>Senha</span>
+          <input type="password" id="login-password" required autofocus />
+        </label>
+        <button type="submit" class="btn btn-primary">Entrar</button>
+        <p class="error-msg" id="login-error" hidden></p>
+      </form>
+    </div>
+  </main>
+
+  <!-- ===================== Escolha de avaliadora ===================== -->
+  <main id="admin-screen-evaluator" class="app-shell" hidden>
+    <div class="card">
+      <p class="eyebrow">Painel da pesquisadora</p>
+      <h1>Avaliando como</h1>
+      <p class="lead">
+        Escolha qual avaliadora você é nesta sessão de categorização. Isso
+        permite calcular a concordância entre A e B.
+      </p>
+      <div class="chip-group chip-group-large">
+        <button class="btn btn-primary" id="btn-evaluator-a">Avaliadora A</button>
+        <button class="btn btn-primary" id="btn-evaluator-b">Avaliadora B</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===================== Painel principal ===================== -->
+  <div id="admin-panel" hidden>
+    <header class="admin-header">
+      <div>
+        <strong>Painel da pesquisadora</strong>
+        <span class="admin-evaluator-tag" id="current-evaluator-tag">Avaliadora —</span>
+      </div>
+      <nav class="admin-nav">
+        <button class="admin-tab" id="tab-queue" data-tab="queue">Fila de submissões</button>
+        <button class="admin-tab" id="tab-indicators" data-tab="indicators">Indicadores</button>
+        <button class="admin-tab" id="tab-usability" data-tab="usability">Usabilidade (SUS)</button>
+        <button class="admin-tab admin-tab-ghost" id="btn-logout">Sair</button>
+      </nav>
+    </header>
+
+    <!-- ===================== Fila de submissões ===================== -->
+    <!-- User story: Sistema de Fila de Submissões -->
+    <section id="admin-view-queue" class="admin-view">
+      <div class="admin-view-header">
+        <h1>Fila de submissões</h1>
+        <div class="queue-filters">
+          <button class="filter-btn is-active" data-filter="todas">Todas</button>
+          <button class="filter-btn" data-filter="pendentes">Pendentes</button>
+        </div>
+      </div>
+      <table class="queue-table">
+        <thead>
+          <tr>
+            <th>Participante</th>
+            <th>Rede · Formato</th>
+            <th>Data</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="queue-tbody"></tbody>
+      </table>
+      <p class="hint" id="queue-empty" hidden>Nenhum item encontrado.</p>
+    </section>
+
+    <!-- ===================== Categorização ===================== -->
+    <!-- User story: Sistema de Categorização de Conteúdos -->
+    <section id="admin-view-categorize" class="admin-view" hidden>
+      <button class="btn-link" id="btn-back-to-queue">&larr; Voltar para a fila</button>
+
+      <div class="categorize-grid">
+        <div class="categorize-item-info">
+          <h2>Item <span id="cat-code"></span></h2>
+          <p><strong>Rede/Formato:</strong> <span id="cat-network-format"></span></p>
+          <p><strong>Data em que apareceu:</strong> <span id="cat-date"></span></p>
+          <p>
+            <strong>Link:</strong>
+            <a id="cat-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+          </p>
+          <p><strong>Motivo apontado pela participante:</strong></p>
+          <p class="reason-quote" id="cat-reason"></p>
+
+          <div id="cat-other-evaluator" class="other-evaluator-box" hidden>
+            <strong>Categorização da outra avaliadora:</strong>
+            <p id="cat-other-evaluator-text"></p>
+          </div>
+        </div>
+
+        <form id="categorize-form" class="categorize-form">
+          <fieldset class="field">
+            <legend>Aparência idealizada</legend>
+            <div class="chip-group" id="cat-group-a"></div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>Aceitação corporal</legend>
+            <div class="chip-group" id="cat-group-b"></div>
+          </fieldset>
+
+          <p class="hint" id="cat-category-hint">Escolha até 2 categorias.</p>
+
+          <label class="field">
+            <span>Tom</span>
+            <select id="cat-tone" required>
+              <option value="" disabled selected>Selecione</option>
+              <option value="inspiracional">Inspiracional</option>
+              <option value="normativo">Normativo</option>
+              <option value="crítico">Crítico</option>
+              <option value="humor">Humor</option>
+            </select>
+          </label>
+
+          <fieldset class="field">
+            <legend>Intenção comercial</legend>
+            <div class="chip-group">
+              <label class="chip"><input type="radio" name="cat-commercial" value="sim" required /><span>Sim</span></label>
+              <label class="chip"><input type="radio" name="cat-commercial" value="não" /><span>Não</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>Edição aparente</legend>
+            <div class="chip-group">
+              <label class="chip"><input type="radio" name="cat-editing" value="sim" required /><span>Sim</span></label>
+              <label class="chip"><input type="radio" name="cat-editing" value="não" /><span>Não</span></label>
+              <label class="chip"><input type="radio" name="cat-editing" value="incerto" /><span>Incerto</span></label>
+            </div>
+          </fieldset>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="cat-ambiguous" />
+            <span>Marcar como caso ambíguo (levar para discussão de consenso)</span>
+          </label>
+
+          <label class="field">
+            <span>Notas da avaliadora (opcional)</span>
+            <textarea id="cat-notes" rows="2"></textarea>
+          </label>
+
+          <button type="submit" class="btn btn-primary">Salvar e próximo</button>
+          <p class="error-msg" id="categorize-error" hidden></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===================== Indicadores / Concordância ===================== -->
+    <!-- User story: Indicador Simples de Concordância -->
+    <section id="admin-view-indicators" class="admin-view" hidden>
+      <h1>Indicadores</h1>
+      <div class="stats-row">
+        <div class="stat-tile">
+          <span class="stat-value" id="stat-collected">—</span>
+          <span class="stat-label">Itens coletados</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value" id="stat-categorized">—</span>
+          <span class="stat-label">Categorizados</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value" id="stat-agreement">—</span>
+          <span class="stat-label">Concordância entre avaliadoras</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value" id="stat-time">—</span>
+          <span class="stat-label">Tempo médio / item (min)</span>
+        </div>
+      </div>
+
+      <h2>Itens divergentes / ambíguos</h2>
+      <ul class="rec-list" id="divergent-list"></ul>
+      <p class="hint" id="divergent-empty" hidden>
+        Nenhuma divergência entre avaliadoras até o momento.
+      </p>
+    </section>
+
+    <!-- ===================== Usabilidade (SUS) ===================== -->
+    <!-- User story (Sprint 4): Questionário System Usability Scale -->
+    <section id="admin-view-usability" class="admin-view" hidden>
+      <h1>Usabilidade (SUS)</h1>
+      <p class="lead">
+        Resultado do teste formativo de usabilidade aplicado às usuárias
+        (System Usability Scale, Brooke, 1996), após a execução das
+        tarefas representativas do protocolo de coleta. Avalia só o app
+        da participante. Link para aplicar:
+        <a id="sus-link" href="sus.html" target="_blank" rel="noopener noreferrer">sus.html</a>
+      </p>
+
+      <div class="stats-row">
+        <div class="stat-tile">
+          <span class="stat-value" id="sus-stat-count">—</span>
+          <span class="stat-label">Respostas coletadas</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value" id="sus-stat-score">—</span>
+          <span class="stat-label">Pontuação SUS média (0-100)</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value" id="sus-stat-band">—</span>
+          <span class="stat-label">Classificação</span>
+        </div>
+      </div>
+
+      <h2>Pontos de atrito por afirmação</h2>
+      <p class="hint">
+        Contribuição média de cada afirmação (0 a 4, onde 4 é sempre
+        melhor). Afirmações com média baixa indicam onde as usuárias
+        sentiram mais dificuldade.
+      </p>
+      <table class="susitem-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Afirmação</th>
+            <th>Média</th>
+          </tr>
+        </thead>
+        <tbody id="sus-items-tbody"></tbody>
+      </table>
+      <p class="hint" id="sus-empty" hidden>
+        Nenhuma resposta ao SUS ainda. Compartilhe o link acima com as
+        testadoras depois que elas executarem as tarefas do guia de teste
+        de usabilidade.
+      </p>
+
+      <h2>Respostas individuais</h2>
+      <table class="queue-table">
+        <thead>
+          <tr>
+            <th>Sessão</th>
+            <th>Pontuação</th>
+            <th>Classificação</th>
+            <th>Data</th>
+          </tr>
+        </thead>
+        <tbody id="sus-responses-tbody"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

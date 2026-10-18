@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pesquisa rápida sobre o sistema</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <main class="app-shell">
+    <div class="card card-wide">
+
+      <!-- ===================== Questionário SUS ===================== -->
+      <!-- User story (Sprint 4): Questionário System Usability Scale -->
+      <section id="screen-sus-form">
+        <p class="eyebrow">Teste de usabilidade</p>
+        <h1>O que você achou do sistema?</h1>
+        <p class="lead">
+          Obrigada por testar o app que você acabou de usar (o lado da
+          participante, não o painel da pesquisadora). Leia cada frase
+          abaixo e marque o quanto você concorda com ela: <strong>1 =
+          discordo totalmente</strong>, <strong>5 = concordo
+          totalmente</strong>. Não existe resposta certa ou errada.
+        </p>
+
+        <form id="sus-form">
+          <label class="field">
+            <span>Identificação da sessão (opcional)</span>
+            <input
+              type="text"
+              id="tester-label"
+              placeholder="ex.: Testadora 1, 17/10"
+              maxlength="80"
+            />
+          </label>
+
+          <div id="sus-items"></div>
+
+          <button type="submit" class="btn btn-primary">Enviar respostas</button>
+          <p class="error-msg" id="sus-error" hidden></p>
+        </form>
+      </section>
+
+      <!-- ===================== Agradecimento ===================== -->
+      <section id="screen-sus-thanks" hidden>
+        <p class="eyebrow">Obrigada!</p>
+        <h1>Respostas enviadas</h1>
+        <p class="lead">
+          Suas respostas foram registradas de forma anônima e vão ajudar a
+          melhorar o sistema antes da coleta de dados da pesquisa.
+        </p>
+      </section>
+
+    </div>
+
+    <p class="footer-note">
+      Sprint 4 &middot; Teste formativo de usabilidade (SUS) &middot; TCC2
+    </p>
+  </main>
+
+  <script src="js/sus.js"></script>
+</body>
+</html>

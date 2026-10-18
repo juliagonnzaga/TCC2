@@ -222,6 +222,25 @@
 
     </div>
 
+    <!--
+      Modal de confirmação de envio (feedback após enviar uma
+      recomendação). Fica fora do .card porque cobre a tela inteira.
+    -->
+    <div id="submit-success-modal" class="modal-overlay" hidden>
+      <div class="modal-box" role="alertdialog" aria-labelledby="submit-success-title">
+        <button type="button" class="modal-close" id="btn-modal-close" aria-label="Fechar">×</button>
+        <div class="modal-icon" aria-hidden="true">✓</div>
+        <h2 id="submit-success-title">Recomendação enviada!</h2>
+        <p id="submit-success-message" class="lead"></p>
+        <button id="btn-modal-new" class="btn btn-primary">
+          Enviar nova recomendação
+        </button>
+        <button id="btn-modal-status" class="btn btn-secondary">
+          Ver meus envios
+        </button>
+      </div>
+    </div>
+
     <p class="footer-note">
       Sprint 1-4 &middot; Sistema de coleta de recomendações &middot; TCC2
     </p>
