@@ -7,7 +7,7 @@
     "start": "node server.js",
     "dev": "node server.js",
     "pretest": "node scripts/reset-data.js",
-    "test": "node tests/test-flow.js && node scripts/reset-data.js && node tests/test-admin-flow.js && node scripts/reset-data.js && node tests/test-acceptance.js && node scripts/reset-data.js && node tests/test-sus-flow.js"
+    "test": "node tests/test-flow.js && node scripts/reset-data.js && node tests/test-admin-flow.js && node scripts/reset-data.js && node tests/test-acceptance.js && node scripts/reset-data.js && node tests/test-sus-flow.js && node scripts/reset-data.js && node tests/test-back-navigation.js"
   },
   "dependencies": {
     "express": "^4.19.2"

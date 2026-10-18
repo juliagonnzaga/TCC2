@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pesquisa - Recomendações em Redes Sociais</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <main class="app-shell">
+    <div class="card">
+
+      <!-- ===================== TELA 1: Boas-vindas + TCLE ===================== -->
+      <!-- User story: Sistema de Boas-vindas e Consentimento (TCLE) -->
+      <section id="screen-welcome" class="screen" data-screen="welcome">
+        <p class="eyebrow">1 · Boas-vindas + TCLE</p>
+        <h1>Bem-vinda à pesquisa</h1>
+        <p class="lead">
+          Esta pesquisa busca entender que tipo de conteúdo as redes sociais
+          recomendam a mulheres, relacionado a corpo e aparência. Sua
+          participação é anônima e voluntária.
+        </p>
+
+        <div class="tcle-box" tabindex="0" aria-label="Termo de Consentimento Livre e Esclarecido">
+          <h2>Termo de Consentimento Livre e Esclarecido (TCLE)</h2>
+          <p>
+            <em>[Texto completo do TCLE aprovado pelo Comitê de Ética deve ser
+            inserido aqui antes da coleta real. Este é um texto de exemplo
+            para a Sprint 1.]</em>
+          </p>
+          <p>
+            Ao aceitar, você concorda em participar da coleta enviando
+            recomendações que recebeu em redes sociais, sem fornecer nome,
+            e-mail ou qualquer dado que possa te identificar. Você pode
+            interromper sua participação a qualquer momento, sem
+            justificativa.
+          </p>
+        </div>
+
+        <div id="welcome-tcle-flow">
+          <label class="checkbox-row">
+            <input type="checkbox" id="tcle-checkbox" />
+            <span>Li e concordo em participar</span>
+          </label>
+
+          <button id="btn-accept-tcle" class="btn btn-primary" disabled>
+            Aceitar e continuar
+          </button>
+
+          <p class="error-msg" id="welcome-error" hidden></p>
+        </div>
+
+        <!--
+          Mostrado só quando a participante volta pra essa tela pelo "←
+          Voltar" depois de já ter aceitado o TCLE (código anônimo já
+          gerado). Evita que ela clique "Aceitar" de novo e acabe
+          gerando um SEGUNDO código, o que perderia o vínculo com as
+          recomendações já enviadas no código antigo.
+        -->
+        <div id="welcome-already-done" hidden>
+          <p class="hint">Você já concluiu essa etapa.</p>
+          <button id="btn-welcome-continue" class="btn btn-primary">
+            Continuar
+          </button>
+        </div>
+      </section>
+
+      <!--
+        Tela de perfil mínimo anônimo (faixa etária + rede social)
+        retirada do front-end a pedido do orientador — essa parte não
+        deve ser desenvolvida por enquanto. O código anônimo abaixo
+        agora é gerado automaticamente assim que o TCLE é aceito, sem
+        pedir esses dados demográficos (ver nota em server.js, endpoint
+        POST /api/profile, e a seção "Limitações conhecidas" no README).
+      -->
+
+      <!-- ===================== TELA 2: Código anônimo gerado ===================== -->
+      <section id="screen-code" class="screen" data-screen="code" hidden>
+        <button type="button" class="btn-back-link">← Voltar</button>
+        <p class="eyebrow">Seu código anônimo</p>
+        <h1 id="anonymous-code">—</h1>
+        <p class="lead">
+          Guarde este código. Ele identifica sua participação sem revelar
+          quem você é.
+        </p>
+        <button id="btn-go-instructions" class="btn btn-primary">
+          Continuar
+        </button>
+      </section>
+
+      <!-- ===================== TELA 3: Instruções de coleta ===================== -->
+      <!-- User story: Tela de Instruções de Coleta (sem back-end) -->
+      <section id="screen-instructions" class="screen" data-screen="instructions" hidden>
+        <button type="button" class="btn-back-link">← Voltar</button>
+        <p class="eyebrow">3 · Instruções de coleta</p>
+        <h1>Como participar</h1>
+
+        <ol class="steps">
+          <li>
+            <strong>Use a rede normalmente</strong> e identifique um
+            conteúdo recomendado (Reels, Feed ou Explorar) relacionado a
+            corpo, aparência ou alimentação.
+          </li>
+          <li>
+            <strong>Copie o link do post ou Reels</strong> (toque em
+            "Compartilhar" → "Copiar link") e cole na plataforma.
+          </li>
+          <li>
+            <strong>Envie até 3 recomendações</strong> pela plataforma, ao
+            longo dos próximos dias.
+          </li>
+        </ol>
+
+        <button id="btn-start" class="btn btn-primary">
+          Entendi, começar
+        </button>
+      </section>
+
+      <!-- ===================== TELA 4: Envio de recomendação ===================== -->
+      <!-- User story: Sistema de Envio de Recomendação -->
+      <section id="screen-submit" class="screen" data-screen="submit" hidden>
+        <button type="button" class="btn-back-link">← Voltar</button>
+        <p class="eyebrow">4 · Enviar recomendação</p>
+        <h1>Enviar recomendação</h1>
+        <p class="lead" id="submit-progress">
+          Cole o link do post ou Reels que apareceu para você.
+        </p>
+
+        <form id="submit-form">
+          <label class="field">
+            <span>Link do conteúdo</span>
+            <input
+              type="url"
+              id="rec-link"
+              placeholder="https://www.instagram.com/reel/..."
+              required
+            />
+          </label>
+
+          <fieldset class="field">
+            <legend>Rede</legend>
+            <div class="chip-group" id="rec-network-group">
+              <label class="chip">
+                <input type="radio" name="rec-network" value="Instagram" required />
+                <span>Instagram</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="rec-network" value="TikTok" />
+                <span>TikTok</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="rec-network" value="Outra" />
+                <span>Outra</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>Formato</legend>
+            <div class="chip-group" id="rec-format-group">
+              <label class="chip">
+                <input type="radio" name="rec-format" value="Reels" required />
+                <span>Reels</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="rec-format" value="Feed" />
+                <span>Feed</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="rec-format" value="Explorar" />
+                <span>Explorar</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="rec-format" value="Outro" />
+                <span>Outro</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <label class="field">
+            <span>Data em que apareceu</span>
+            <input type="date" id="rec-date" required />
+          </label>
+
+          <label class="field">
+            <span>Por que você acha que isso foi recomendado a você?</span>
+            <textarea
+              id="rec-reason"
+              rows="3"
+              placeholder="Escreva aqui..."
+              required
+            ></textarea>
+          </label>
+
+          <button type="submit" class="btn btn-primary">Enviar</button>
+          <p class="error-msg" id="submit-error" hidden></p>
+        </form>
+
+        <button id="btn-view-status" class="btn btn-secondary">
+          Ver meus envios
+        </button>
+      </section>
+
+      <!-- ===================== TELA 5: Status dos envios ===================== -->
+      <!-- User story: Sistema de Status dos Envios -->
+      <section id="screen-status" class="screen" data-screen="status" hidden>
+        <button type="button" class="btn-back-link">← Voltar</button>
+        <p class="eyebrow">5 · Seus envios</p>
+        <h1 id="status-title">Seus envios</h1>
+
+        <ul class="rec-list" id="rec-list"></ul>
+
+        <p class="hint" id="status-empty" hidden>
+          Você ainda não enviou nenhuma recomendação.
+        </p>
+
+        <button id="btn-new-submission" class="btn btn-primary">
+          Enviar nova recomendação
+        </button>
+      </section>
+
+    </div>
+
+    <p class="footer-note">
+      Sprint 1-4 &middot; Sistema de coleta de recomendações &middot; TCC2
+    </p>
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

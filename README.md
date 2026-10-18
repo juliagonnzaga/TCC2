@@ -23,6 +23,7 @@ Nenhum dado de identificação real é coletado da participante; o vínculo entr
 - Tela de instruções de coleta.
 - Envio de recomendações por link do post/Reels (rede, formato, data e motivo), limitado a 3 envios por participante.
 - Acompanhamento do status dos próprios envios.
+- Botão "← Voltar" em todas as telas, para a participante poder revisar a tela anterior a qualquer momento. Ao voltar até a tela de TCLE depois que o código anônimo já foi gerado, aparece um aviso em vez do checkbox/"Aceitar" de novo, para não gerar um segundo código por engano.
 
 **Painel da pesquisadora**
 - Login e seleção de avaliadora (A/B).
@@ -67,7 +68,8 @@ npm test                          # em outro terminal
 1. `test-flow.js` — fluxo da participante de ponta a ponta;
 2. `test-admin-flow.js` — fluxo do painel da pesquisadora de ponta a ponta;
 3. `test-acceptance.js` — testes funcionais dos critérios de aceitação de todas as User Stories (Sprints 1-4), direto na API;
-4. `test-sus-flow.js` — fluxo do questionário SUS de ponta a ponta, conferindo a pontuação no painel.
+4. `test-sus-flow.js` — fluxo do questionário SUS de ponta a ponta, conferindo a pontuação no painel;
+5. `test-back-navigation.js` — botão "← Voltar" em todas as telas da participante, incluindo a regra de não gerar um segundo código ao voltar para o TCLE.
 
 ## Estrutura do projeto
 
@@ -86,6 +88,7 @@ tests/
   test-admin-flow.js    teste de ponta a ponta — painel da pesquisadora
   test-acceptance.js    testes funcionais de aceitação (Sprints 1-4), via API
   test-sus-flow.js      teste de ponta a ponta — questionário SUS
+  test-back-navigation.js  teste do botão "← Voltar" em todas as telas
 scripts/
   reset-data.js          limpa data/*.json entre rodadas de teste
 docs/

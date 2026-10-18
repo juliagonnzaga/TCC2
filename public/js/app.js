@@ -32,10 +32,52 @@ const screens = {
   status: document.getElementById("screen-status"),
 };
 
+// Tela anterior de cada tela, usada pelo botão "← Voltar". É um mapa fixo
+// (não uma pilha de histórico) porque o fluxo da participante é linear e
+// isso também funciona certo depois de um refresh de página (ver
+// resumeSession() no final do arquivo).
+const BACK_TARGETS = {
+  code: "welcome",
+  instructions: "code",
+  submit: "instructions",
+  status: "submit",
+};
+
 function showScreen(name) {
   Object.values(screens).forEach((el) => (el.hidden = true));
   screens[name].hidden = false;
+  if (name === "welcome") {
+    renderWelcomeScreen();
+  }
 }
+
+// Ao voltar para a tela de boas-vindas depois que o código anônimo já foi
+// gerado, mostra um aviso + botão "Continuar" em vez do checkbox/"Aceitar"
+// de novo — senão a participante poderia reenviar o TCLE e gerar um
+// SEGUNDO código, perdendo o vínculo com recomendações já enviadas.
+function renderWelcomeScreen() {
+  const tcleFlow = document.getElementById("welcome-tcle-flow");
+  const alreadyDone = document.getElementById("welcome-already-done");
+  if (state.anonymousCode) {
+    tcleFlow.hidden = true;
+    alreadyDone.hidden = false;
+  } else {
+    tcleFlow.hidden = false;
+    alreadyDone.hidden = true;
+  }
+}
+
+document.getElementById("btn-welcome-continue").addEventListener("click", () => {
+  showScreen("code");
+});
+
+document.querySelectorAll(".btn-back-link").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const current = btn.closest(".screen").dataset.screen;
+    const target = BACK_TARGETS[current];
+    if (target) showScreen(target);
+  });
+});
 
 function showError(elId, message) {
   const el = document.getElementById(elId);
