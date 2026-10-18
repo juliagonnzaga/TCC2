@@ -11,6 +11,8 @@
   <main class="app-shell">
     <div class="card">
 
+      <!-- ===================== TELA 1: Boas-vindas + TCLE ===================== -->
+      <!-- User story: Sistema de Boas-vindas e Consentimento (TCLE) -->
       <section id="screen-welcome" class="screen" data-screen="welcome">
         <p class="eyebrow">1 · Boas-vindas + TCLE</p>
         <h1>Bem-vinda à pesquisa</h1>
@@ -23,7 +25,9 @@
         <div class="tcle-box" tabindex="0" aria-label="Termo de Consentimento Livre e Esclarecido">
           <h2>Termo de Consentimento Livre e Esclarecido (TCLE)</h2>
           <p>
-            <em>[Texto do TCLE]</em>
+            <em>[Texto completo do TCLE aprovado pelo Comitê de Ética deve ser
+            inserido aqui antes da coleta real. Este é um texto de exemplo
+            para a Sprint 1.]</em>
           </p>
           <p>
             Ao aceitar, você concorda em participar da coleta enviando
@@ -46,51 +50,16 @@
         <p class="error-msg" id="welcome-error" hidden></p>
       </section>
 
-      <section id="screen-profile" class="screen" data-screen="profile" hidden>
-        <p class="eyebrow">2 · Seu perfil</p>
-        <h1>Seu perfil</h1>
-        <p class="lead">
-          Nenhum dado identificável é coletado aqui. Estas duas informações
-          servem apenas para caracterizar a amostra da pesquisa.
-        </p>
+      <!--
+        Tela de perfil mínimo anônimo (faixa etária + rede social)
+        retirada do front-end a pedido do orientador — essa parte não
+        deve ser desenvolvida por enquanto. O código anônimo abaixo
+        agora é gerado automaticamente assim que o TCLE é aceito, sem
+        pedir esses dados demográficos (ver nota em server.js, endpoint
+        POST /api/profile, e a seção "Limitações conhecidas" no README).
+      -->
 
-        <form id="profile-form">
-          <label class="field">
-            <span>Faixa etária</span>
-            <select id="age-range" required>
-              <option value="" disabled selected>Selecione</option>
-              <option value="13-17">13–17</option>
-              <option value="18-24">18–24</option>
-              <option value="25-34">25–34</option>
-              <option value="35-44">35–44</option>
-              <option value="45+">45+</option>
-            </select>
-          </label>
-
-          <fieldset class="field">
-            <legend>Rede que mais usa</legend>
-            <div class="chip-group" id="network-group">
-              <label class="chip">
-                <input type="radio" name="network" value="Instagram" required />
-                <span>Instagram</span>
-              </label>
-              <label class="chip">
-                <input type="radio" name="network" value="TikTok" />
-                <span>TikTok</span>
-              </label>
-              <label class="chip">
-                <input type="radio" name="network" value="Outra" />
-                <span>Outra</span>
-              </label>
-            </div>
-          </fieldset>
-
-          <button type="submit" class="btn btn-primary">Continuar</button>
-          <p class="error-msg" id="profile-error" hidden></p>
-        </form>
-      </section>
-
-      <!-- ===================== TELA 2b: Código anônimo gerado ===================== -->
+      <!-- ===================== TELA 2: Código anônimo gerado ===================== -->
       <section id="screen-code" class="screen" data-screen="code" hidden>
         <p class="eyebrow">Seu código anônimo</p>
         <h1 id="anonymous-code">—</h1>
@@ -111,13 +80,13 @@
 
         <ol class="steps">
           <li>
-            <strong>Use a rede normalmente</strong> e copie o link de um
+            <strong>Use a rede normalmente</strong> e identifique um
             conteúdo recomendado (Reels, Feed ou Explorar) relacionado a
             corpo, aparência ou alimentação.
           </li>
           <li>
-            <strong>Oculte nomes, fotos de perfil e qualquer dado</strong>
-            que identifique terceiros antes de enviar o print.
+            <strong>Copie o link do post ou Reels</strong> (toque em
+            "Compartilhar" → "Copiar link") e cole na plataforma.
           </li>
           <li>
             <strong>Envie até 3 recomendações</strong> pela plataforma, ao
@@ -130,7 +99,112 @@
         </button>
       </section>
 
+      <!-- ===================== TELA 4: Envio de recomendação ===================== -->
+      <!-- User story: Sistema de Envio de Recomendação -->
+      <section id="screen-submit" class="screen" data-screen="submit" hidden>
+        <p class="eyebrow">4 · Enviar recomendação</p>
+        <h1>Enviar recomendação</h1>
+        <p class="lead" id="submit-progress">
+          Cole o link do post ou Reels que apareceu para você.
+        </p>
+
+        <form id="submit-form">
+          <label class="field">
+            <span>Link do conteúdo</span>
+            <input
+              type="url"
+              id="rec-link"
+              placeholder="https://www.instagram.com/reel/..."
+              required
+            />
+          </label>
+
+          <fieldset class="field">
+            <legend>Rede</legend>
+            <div class="chip-group" id="rec-network-group">
+              <label class="chip">
+                <input type="radio" name="rec-network" value="Instagram" required />
+                <span>Instagram</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="rec-network" value="TikTok" />
+                <span>TikTok</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="rec-network" value="Outra" />
+                <span>Outra</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>Formato</legend>
+            <div class="chip-group" id="rec-format-group">
+              <label class="chip">
+                <input type="radio" name="rec-format" value="Reels" required />
+                <span>Reels</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="rec-format" value="Feed" />
+                <span>Feed</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="rec-format" value="Explorar" />
+                <span>Explorar</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="rec-format" value="Outro" />
+                <span>Outro</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <label class="field">
+            <span>Data em que apareceu</span>
+            <input type="date" id="rec-date" required />
+          </label>
+
+          <label class="field">
+            <span>Por que você acha que isso foi recomendado a você?</span>
+            <textarea
+              id="rec-reason"
+              rows="3"
+              placeholder="Escreva aqui..."
+              required
+            ></textarea>
+          </label>
+
+          <button type="submit" class="btn btn-primary">Enviar</button>
+          <p class="error-msg" id="submit-error" hidden></p>
+        </form>
+
+        <button id="btn-view-status" class="btn btn-secondary">
+          Ver meus envios
+        </button>
+      </section>
+
+      <!-- ===================== TELA 5: Status dos envios ===================== -->
+      <!-- User story: Sistema de Status dos Envios -->
+      <section id="screen-status" class="screen" data-screen="status" hidden>
+        <p class="eyebrow">5 · Seus envios</p>
+        <h1 id="status-title">Seus envios</h1>
+
+        <ul class="rec-list" id="rec-list"></ul>
+
+        <p class="hint" id="status-empty" hidden>
+          Você ainda não enviou nenhuma recomendação.
+        </p>
+
+        <button id="btn-new-submission" class="btn btn-primary">
+          Enviar nova recomendação
+        </button>
+      </section>
+
     </div>
+
+    <p class="footer-note">
+      Sprint 1-3 &middot; Sistema de coleta de recomendações &middot; TCC2
+    </p>
   </main>
 
   <script src="js/app.js"></script>

@@ -26,24 +26,50 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   await page.check("#tcle-checkbox");
   if (await acceptBtn.isDisabled()) throw new Error("Aceitar deveria habilitar após marcar checkbox");
   await acceptBtn.click();
-  await page.waitForSelector("#screen-profile:not([hidden])");
-  await page.screenshot({ path: "shot-2-profile.png" });
 
-  // Screen 2: profile
-  await page.selectOption("#age-range", "18-24");
-  await page.click('label.chip:has(input[value="Instagram"])');
-  const instagramChecked = await page.isChecked('input[name="network"][value="Instagram"]');
-  if (!instagramChecked) throw new Error("Clique no chip não marcou o rádio Instagram");
-  await page.click('#profile-form button[type=submit]');
+  // Tela de perfil mínimo anônimo foi retirada (orientação do
+  // professor) — aceitar o TCLE já gera e mostra o código direto.
   await page.waitForSelector("#screen-code:not([hidden])");
   const code = await page.locator("#anonymous-code").innerText();
   if (!/^P\d{3}$/.test(code)) throw new Error(`Código anônimo com formato inesperado: ${code}`);
-  await page.screenshot({ path: "shot-3-code.png" });
+  await page.screenshot({ path: "shot-2-code.png" });
 
-  // Screen 2b -> 3: instructions
+  // Screen 2 -> 3: instructions
   await page.click("#btn-go-instructions");
   await page.waitForSelector("#screen-instructions:not([hidden])");
-  await page.screenshot({ path: "shot-4-instructions.png" });
+  await page.screenshot({ path: "shot-3-instructions.png" });
+
+  // Screen 3 -> 4: envio de recomendação (Sprint 2)
+  await page.click("#btn-start");
+  await page.waitForSelector("#screen-submit:not([hidden])");
+
+  await page.fill("#rec-link", "https://www.instagram.com/reel/teste123");
+  await page.click('label.chip:has(input[name="rec-network"][value="Instagram"])');
+  await page.click('label.chip:has(input[name="rec-format"][value="Reels"])');
+  await page.fill("#rec-date", "2026-09-29");
+  await page.fill("#rec-reason", "Aparece muito conteúdo sobre dieta");
+  await page.screenshot({ path: "shot-4-submit.png" });
+  await page.click('#submit-form button[type=submit]');
+
+  await page.waitForFunction(
+    () => document.getElementById("submit-progress").textContent.includes("Recomendação enviada")
+  );
+
+  // Screen 4 -> 5: status dos envios
+  await page.click("#btn-view-status");
+  await page.waitForSelector("#screen-status:not([hidden])");
+  await page.waitForSelector(".rec-item");
+  const itemCount = await page.locator(".rec-item").count();
+  if (itemCount !== 1) throw new Error(`Esperava 1 item na lista de envios, encontrei ${itemCount}`);
+  const statusTitle = await page.locator("#status-title").innerText();
+  if (!statusTitle.includes("1 de 3")) throw new Error(`Título de status inesperado: ${statusTitle}`);
+  await page.screenshot({ path: "shot-5-status.png" });
+
+  // Volta pra tela de envio e confirma que o link enviado aparece na lista
+  const firstLink = await page.locator(".rec-link").first().getAttribute("href");
+  if (firstLink !== "https://www.instagram.com/reel/teste123") {
+    throw new Error(`Link salvo não corresponde ao enviado: ${firstLink}`);
+  }
 
   // Reload to confirm session resume (localStorage) lands back on instructions
   await page.reload({ waitUntil: "networkidle" });
