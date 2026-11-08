@@ -1,13 +1,12 @@
 /**
  * TCC2 - Sistema web de coleta de recomendações
  *
- * Sprint 1: Fundação e fluxo inicial da participante
- *  - Serviço de registro do aceite do TCLE     (POST /api/consent)
- *  - Serviço de geração do código anônimo      (POST /api/profile)
+ * Sprint 1 (substituída na Sprint 5 — ver nota abaixo): Fundação e fluxo
+ * inicial da participante, com TCLE + código anônimo.
  *
  * Sprint 2: Coleta de recomendações
  *  - Serviço de recebimento da recomendação    (POST /api/recommendations)
- *  - Serviço de consulta dos envios            (GET  /api/recommendations/:code)
+ *  - Serviço de consulta dos envios            (GET  /api/recommendations)
  *
  * Sprint 3: Painel da pesquisadora
  *  - Serviço de autenticação                   (POST /api/auth/login)
@@ -25,6 +24,22 @@
  *  - Testes funcionais automatizados cobrindo os critérios de aceitação
  *    de cada User Story (ver tests/test-acceptance.js)
  *
+ * Sprint 5 (orientação do professor): o fluxo de "aceitar TCLE -> gerar
+ * código anônimo" (POST /api/consent + POST /api/profile) foi SUBSTITUÍDO
+ * por um cadastro/login de verdade da participante, com e-mail e senha
+ * (POST /api/participants/register e POST /api/participants/login). A
+ * participante agora tem uma conta persistente (pode entrar de qualquer
+ * dispositivo), em vez de um código gerado a cada sessão.
+ *
+ * IMPORTANTE (impacto na anonimização, para refletir no texto do TCLE e
+ * da metodologia antes de qualquer submissão ao Comitê de Ética): a
+ * coleta deixa de ser 100% anônima (a participante agora é identificável
+ * pelo e-mail) e passa a ser CONFIDENCIAL — o e-mail fica só no cadastro
+ * da participante; o painel da pesquisadora e as telas de categorização
+ * continuam mostrando só o código interno (`code`, nunca o e-mail), para
+ * que as avaliadoras continuem sem acesso à identidade de quem enviou
+ * cada conteúdo (ver "Limitações conhecidas" no README).
+ *
  * IMPORTANTE (mudança de protocolo combinada com a orientação): a partir
  * da Sprint 2, a coleta passou de "print anonimizado" para "link do
  * post/reels", para reduzir a fricção da participante. Isso remove a
@@ -35,7 +50,9 @@
  * Armazenamento: arquivos JSON locais em ./data (suficiente para o MVP).
  * Antes da coleta real com participantes, isso deve ser substituído por
  * armazenamento cifrado, conforme já indicado na metodologia (Seção
- * 3.5.2 / Trabalhos Futuros da Monografia 1).
+ * 3.5.2 / Trabalhos Futuros da Monografia 1) — isso vale especialmente
+ * agora que o cadastro guarda e-mail (mesmo com a senha com hash, nunca
+ * em texto puro).
  */
 
 const express = require("express");
@@ -47,16 +64,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const DATA_DIR = path.join(__dirname, "data");
-const CONSENTS_FILE = path.join(DATA_DIR, "consents.json");
-const PROFILES_FILE = path.join(DATA_DIR, "profiles.json");
+const PARTICIPANTS_FILE = path.join(DATA_DIR, "participants.json");
 const RECOMMENDATIONS_FILE = path.join(DATA_DIR, "recommendations.json");
 const CATEGORIZATIONS_FILE = path.join(DATA_DIR, "categorizations.json");
 const SUS_FILE = path.join(DATA_DIR, "sus.json");
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 for (const file of [
-  CONSENTS_FILE,
-  PROFILES_FILE,
+  PARTICIPANTS_FILE,
   RECOMMENDATIONS_FILE,
   CATEGORIZATIONS_FILE,
   SUS_FILE,
@@ -80,35 +95,29 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 /**
- * Sub-tarefa: "Serviço de registro do aceite do TCLE (back-end)"
- * Registra o aceite com timestamp e devolve um consentId, que a tela
- * de perfil (próxima etapa) precisa apresentar para gerar o código
- * anônimo — isso é o que garante, no back-end, que ninguém chega ao
- * perfil sem antes ter aceitado o TCLE.
- */
-app.post("/api/consent", (req, res) => {
-  const consents = readJSON(CONSENTS_FILE);
-  const consentId = crypto.randomUUID();
-  const record = { consentId, acceptedAt: new Date().toISOString() };
-  consents.push(record);
-  writeJSON(CONSENTS_FILE, consents);
-  res.status(201).json({ consentId });
-});
-
-/**
- * Sub-tarefa: "Serviço de geração do código anônimo (back-end)"
- * Recebe consentId (+ opcionalmente faixa etária e rede social), valida
- * que o TCLE foi aceito, e gera um código anônimo único (ex.: P427).
- * Nenhum dado identificável é solicitado ou armazenado.
+ * Sub-tarefa (Sprint 5): "Sistema de login da participante"
  *
- * NOTA (orientação do professor, Sprint 3): a tela de perfil mínimo
- * anônimo (faixa etária + rede social) foi retirada do front-end por
- * enquanto — essa parte não deve ser desenvolvida agora. Por isso
- * ageRange e network passaram a ser OPCIONAIS aqui: o front (app.js)
- * chama este endpoint só com o consentId, logo após o aceite do TCLE,
- * para gerar o código sem pedir dados demográficos. Os campos
- * continuam aceitos (e validados, se enviados) para o caso de essa
- * tela voltar depois.
+ * Substitui o fluxo "aceitar TCLE -> gerar código anônimo" por uma
+ * conta de verdade (e-mail + senha).
+ *
+ * Login e aceite do TCLE viraram duas etapas separadas (ajuste pedido
+ * pela Julia depois da primeira versão): primeiro a pessoa cria a conta
+ * ou entra numa já existente, DEPOIS aceita o TCLE. O aceite é
+ * registrado por conta (`tcleAcceptedAt`), não por sessão — então uma
+ * participante que já aceitou antes não precisa aceitar de novo da
+ * próxima vez que entrar (em qualquer dispositivo).
+ *
+ * A senha NUNCA é armazenada em texto puro: é gerada com crypto.scrypt
+ * (função de hash lenta, resistente a força bruta) com um salt
+ * aleatório por participante. Não usamos uma biblioteca externa
+ * (bcrypt) de propósito, para não depender de módulos nativos — o
+ * crypto do próprio Node já é suficiente para o MVP.
+ *
+ * Cada participante continua tendo um código interno (ex.: P427),
+ * igual ao da Sprint 1 — só que agora ele não é mais mostrado para a
+ * própria participante. Ele existe só para o painel da pesquisadora
+ * continuar identificando os envios sem expor o e-mail às avaliadoras
+ * (ver nota no topo do arquivo e "Limitações conhecidas" no README).
  */
 function generateAnonymousCode(existingCodes) {
   let code;
@@ -119,43 +128,185 @@ function generateAnonymousCode(existingCodes) {
   return code;
 }
 
-const VALID_AGE_RANGES = ["13-17", "18-24", "25-34", "35-44", "45+"];
 const VALID_NETWORKS = ["Instagram", "TikTok", "Outra"];
 
-app.post("/api/profile", (req, res) => {
-  const { consentId, ageRange, network } = req.body || {};
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 6;
 
-  if (!consentId) {
-    return res.status(400).json({ error: "consentId é obrigatório." });
-  }
-  if (ageRange && !VALID_AGE_RANGES.includes(ageRange)) {
-    return res.status(400).json({ error: "Faixa etária inválida." });
-  }
-  if (network && !VALID_NETWORKS.includes(network)) {
-    return res.status(400).json({ error: "Rede social inválida." });
-  }
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${hash}`;
+}
 
-  const consents = readJSON(CONSENTS_FILE);
-  const consentExists = consents.some((c) => c.consentId === consentId);
-  if (!consentExists) {
+function verifyPassword(password, storedHash) {
+  const [salt, hash] = String(storedHash || "").split(":");
+  if (!salt || !hash) return false;
+  const hashBuffer = Buffer.from(hash, "hex");
+  const testHash = crypto.scryptSync(password, salt, 64);
+  return hashBuffer.length === testHash.length && crypto.timingSafeEqual(hashBuffer, testHash);
+}
+
+// Tokens de sessão da participante em memória (mesmo padrão já usado
+// para a pesquisadora, ver validTokens mais abaixo): simples o
+// suficiente para o MVP, mas significa que reiniciar o servidor
+// invalida as sessões abertas (a participante precisa entrar de novo).
+const validParticipantTokens = new Map(); // token -> participantId
+
+function requireParticipantAuth(req, res, next) {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+  const participantId = token && validParticipantTokens.get(token);
+  if (!participantId) {
+    return res.status(401).json({ error: "Não autenticado." });
+  }
+  req.participantId = participantId;
+  next();
+}
+
+/**
+ * Sub-tarefa: "Serviço de cadastro da participante (back-end)"
+ */
+app.post("/api/participants/register", (req, res) => {
+  const { email, password } = req.body || {};
+
+  if (!email || !EMAIL_REGEX.test(String(email).trim())) {
+    return res.status(400).json({ error: "Informe um e-mail válido." });
+  }
+  if (!password || String(password).length < MIN_PASSWORD_LENGTH) {
     return res
       .status(400)
-      .json({ error: "TCLE ainda não foi aceito para este consentId." });
+      .json({ error: `A senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.` });
   }
 
-  const profiles = readJSON(PROFILES_FILE);
-  const code = generateAnonymousCode(profiles.map((p) => p.code));
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const participants = readJSON(PARTICIPANTS_FILE);
+  if (participants.some((p) => p.email === normalizedEmail)) {
+    return res
+      .status(409)
+      .json({ error: "Este e-mail já tem cadastro. Faça login." });
+  }
+
   const record = {
-    code,
-    ageRange: ageRange || null,
-    network: network || null,
-    consentId,
+    id: crypto.randomUUID(),
+    email: normalizedEmail,
+    passwordHash: hashPassword(String(password)),
+    code: generateAnonymousCode(participants.map((p) => p.code)),
+    // O TCLE é aceito numa etapa própria, depois do cadastro (ver POST
+    // /api/participants/accept-tcle) — null até lá.
+    tcleAcceptedAt: null,
     createdAt: new Date().toISOString(),
   };
-  profiles.push(record);
-  writeJSON(PROFILES_FILE, profiles);
+  participants.push(record);
+  writeJSON(PARTICIPANTS_FILE, participants);
 
-  res.status(201).json({ code });
+  const token = crypto.randomUUID();
+  validParticipantTokens.set(token, record.id);
+  res.status(201).json({ token, email: record.email, tcleAccepted: false });
+});
+
+/**
+ * Sub-tarefa: "Serviço de login da participante (back-end)"
+ */
+app.post("/api/participants/login", (req, res) => {
+  const { email, password } = req.body || {};
+  if (!email || !password) {
+    return res.status(400).json({ error: "Informe e-mail e senha." });
+  }
+
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const participants = readJSON(PARTICIPANTS_FILE);
+  const participant = participants.find((p) => p.email === normalizedEmail);
+  if (!participant || !verifyPassword(String(password), participant.passwordHash)) {
+    return res.status(401).json({ error: "E-mail ou senha incorretos." });
+  }
+
+  const token = crypto.randomUUID();
+  validParticipantTokens.set(token, participant.id);
+  res.json({ token, email: participant.email, tcleAccepted: !!participant.tcleAcceptedAt });
+});
+
+/**
+ * Sub-tarefa: "Esqueci minha senha" (pedido da Julia). Não exige a senha
+ * antiga (é justamente pra quem não lembra dela) — só o e-mail da conta,
+ * pra identificar quem está redefinindo.
+ *
+ * Limitação conhecida (igual às outras já documentadas no README): como
+ * o sistema não tem envio de e-mail configurado, não dá pra confirmar
+ * que quem está pedindo a troca é dona daquele e-mail (não existe link
+ * de verificação por e-mail). Pra um MVP acadêmico com participantes
+ * conhecidas isso é aceitável, mas precisa virar um fluxo com
+ * verificação por e-mail antes de uma coleta real com estranhas na
+ * internet — ver "Limitações conhecidas" no README.
+ *
+ * Ao redefinir, invalida qualquer sessão aberta dessa conta (se a senha
+ * vazou e alguém mais estava logado, essa sessão para de funcionar).
+ */
+app.post("/api/participants/forgot-password", (req, res) => {
+  const { email, newPassword } = req.body || {};
+
+  if (!email || !EMAIL_REGEX.test(String(email).trim())) {
+    return res.status(400).json({ error: "Informe um e-mail válido." });
+  }
+  if (!newPassword || String(newPassword).length < MIN_PASSWORD_LENGTH) {
+    return res
+      .status(400)
+      .json({ error: `A nova senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.` });
+  }
+
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const participants = readJSON(PARTICIPANTS_FILE);
+  const idx = participants.findIndex((p) => p.email === normalizedEmail);
+  if (idx === -1) {
+    return res.status(404).json({ error: "Não encontramos uma conta com esse e-mail." });
+  }
+
+  participants[idx].passwordHash = hashPassword(String(newPassword));
+  writeJSON(PARTICIPANTS_FILE, participants);
+
+  // Derruba sessões antigas dessa conta — a pessoa precisa entrar de
+  // novo com a senha nova, em qualquer dispositivo onde estivesse logada.
+  const participantId = participants[idx].id;
+  for (const [tok, pid] of validParticipantTokens.entries()) {
+    if (pid === participantId) validParticipantTokens.delete(tok);
+  }
+
+  res.status(200).json({ message: "Senha redefinida com sucesso.", email: participants[idx].email });
+});
+
+/**
+ * Sub-tarefa: "Serviço de verificação de sessão da participante
+ * (back-end)" — usado pelo front para saber se o token salvo no
+ * navegador ainda é válido (ex.: depois de um refresh de página) e se
+ * o TCLE já foi aceito por essa conta, pra decidir se mostra a etapa do
+ * TCLE de novo ou pula direto pras instruções.
+ */
+app.get("/api/participants/me", requireParticipantAuth, (req, res) => {
+  const participants = readJSON(PARTICIPANTS_FILE);
+  const participant = participants.find((p) => p.id === req.participantId);
+  if (!participant) {
+    return res.status(401).json({ error: "Sessão inválida. Faça login novamente." });
+  }
+  res.json({ email: participant.email, tcleAccepted: !!participant.tcleAcceptedAt });
+});
+
+/**
+ * Sub-tarefa: "Serviço de aceite do TCLE (back-end)" — etapa separada
+ * do login/cadastro (ver nota no topo do bloco Sprint 5). Idempotente:
+ * chamar de novo depois de já ter aceitado não faz nada de errado, só
+ * não altera a data do primeiro aceite.
+ */
+app.post("/api/participants/accept-tcle", requireParticipantAuth, (req, res) => {
+  const participants = readJSON(PARTICIPANTS_FILE);
+  const idx = participants.findIndex((p) => p.id === req.participantId);
+  if (idx === -1) {
+    return res.status(401).json({ error: "Sessão inválida. Faça login novamente." });
+  }
+  if (!participants[idx].tcleAcceptedAt) {
+    participants[idx].tcleAcceptedAt = new Date().toISOString();
+    writeJSON(PARTICIPANTS_FILE, participants);
+  }
+  res.status(201).json({ tcleAccepted: true, acceptedAt: participants[idx].tcleAcceptedAt });
 });
 
 /* ===================== Sprint 2: Coleta de recomendações ===================== */
@@ -174,18 +325,19 @@ function isValidUrl(value) {
 
 /**
  * Sub-tarefa: "Serviço de recebimento e armazenamento da recomendação (back-end)"
- * Recebe o código anônimo da participante, o link do conteúdo, rede,
- * formato, data em que apareceu e o motivo percebido. Limita a 3
- * recomendações por participante, conforme o protocolo (Seção 3.3.1
- * da Monografia 1: "até três recomendações elegíveis").
+ * Identifica a participante pelo token de login (Sprint 5 — antes era
+ * pelo código anônimo enviado no corpo da requisição) e recebe o link
+ * do conteúdo, rede, formato, data em que apareceu e o motivo
+ * percebido. Limita a 3 recomendações por participante, conforme o
+ * protocolo (Seção 3.3.1 da Monografia 1: "até três recomendações
+ * elegíveis").
  */
-app.post("/api/recommendations", (req, res) => {
-  const { code, link, network, format, appearedAt, reason } = req.body || {};
+app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
+  const { link, network, format, appearedAt, reason } = req.body || {};
 
-  if (!code || !link || !network || !format || !appearedAt || !reason) {
+  if (!link || !network || !format || !appearedAt || !reason) {
     return res.status(400).json({
-      error:
-        "code, link, network, format, appearedAt e reason são obrigatórios.",
+      error: "link, network, format, appearedAt e reason são obrigatórios.",
     });
   }
   if (!isValidUrl(link)) {
@@ -215,14 +367,21 @@ app.post("/api/recommendations", (req, res) => {
       .json({ error: "Informe uma data válida, que não seja no futuro." });
   }
 
-  const profiles = readJSON(PROFILES_FILE);
-  const participant = profiles.find((p) => p.code === code);
+  const participants = readJSON(PARTICIPANTS_FILE);
+  const participant = participants.find((p) => p.id === req.participantId);
   if (!participant) {
-    return res.status(400).json({ error: "Código anônimo não encontrado." });
+    return res.status(401).json({ error: "Sessão inválida. Faça login novamente." });
+  }
+  if (!participant.tcleAcceptedAt) {
+    return res
+      .status(403)
+      .json({ error: "É necessário aceitar o TCLE antes de enviar recomendações." });
   }
 
   const recommendations = readJSON(RECOMMENDATIONS_FILE);
-  const existingForParticipant = recommendations.filter((r) => r.code === code);
+  const existingForParticipant = recommendations.filter(
+    (r) => r.participantId === participant.id
+  );
   if (existingForParticipant.length >= MAX_RECOMMENDATIONS_PER_PARTICIPANT) {
     return res.status(409).json({
       error: `Você já enviou ${MAX_RECOMMENDATIONS_PER_PARTICIPANT} recomendações, o máximo previsto pelo protocolo. Obrigada pela participação!`,
@@ -231,7 +390,11 @@ app.post("/api/recommendations", (req, res) => {
 
   const record = {
     id: crypto.randomUUID(),
-    code,
+    participantId: participant.id,
+    // Código interno (não é mais mostrado à participante, ver Sprint 5
+    // no topo do arquivo) — é o que o painel da pesquisadora exibe, pra
+    // avaliadora nunca ver o e-mail de quem enviou.
+    code: participant.code,
     link,
     network,
     format,
@@ -252,13 +415,13 @@ app.post("/api/recommendations", (req, res) => {
 
 /**
  * Sub-tarefa: "Serviço de consulta dos envios (back-end)"
- * Retorna as recomendações já enviadas por um código anônimo, para a
- * tela de status dos envios.
+ * Retorna as recomendações já enviadas pela participante autenticada
+ * (Sprint 5 — antes era por código anônimo na URL), para a tela de
+ * status dos envios.
  */
-app.get("/api/recommendations/:code", (req, res) => {
-  const { code } = req.params;
+app.get("/api/recommendations", requireParticipantAuth, (req, res) => {
   const recommendations = readJSON(RECOMMENDATIONS_FILE).filter(
-    (r) => r.code === code
+    (r) => r.participantId === req.participantId
   );
   res.json({
     items: recommendations,
@@ -281,7 +444,13 @@ app.get("/api/recommendations/:code", (req, res) => {
  * calcular concordância entre avaliadoras sem precisar de contas
  * separadas.
  */
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "pesquisa123";
+// `let`, não `const`: pode ser trocada em tempo de execução pelo
+// "esqueci minha senha" do painel (ver POST /api/auth/forgot-password,
+// logo abaixo). A troca vale só até o servidor reiniciar — depois disso
+// volta a valer o que estiver em ADMIN_PASSWORD (ou o padrão de
+// desenvolvimento), igual ao resto das sessões, que também são em
+// memória (ver "Limitações conhecidas" no README).
+let adminPassword = process.env.ADMIN_PASSWORD || "pesquisa123";
 const ADMIN_EVALUATORS = ["A", "B"];
 const validTokens = new Set();
 
@@ -299,12 +468,43 @@ function requireAuth(req, res, next) {
  */
 app.post("/api/auth/login", (req, res) => {
   const { password } = req.body || {};
-  if (password !== ADMIN_PASSWORD) {
+  if (password !== adminPassword) {
     return res.status(401).json({ error: "Senha incorreta." });
   }
   const token = crypto.randomUUID();
   validTokens.add(token);
   res.json({ token, evaluators: ADMIN_EVALUATORS });
+});
+
+/**
+ * Sub-tarefa: "Esqueci minha senha" no painel da pesquisadora (pedido da
+ * Julia, mesmo padrão do lado da participante: só pede a senha nova +
+ * confirmação no front, sem pedir a senha atual).
+ *
+ * Limitação conhecida, diferente do lado da participante: aqui não
+ * existe uma "conta" por pessoa, é uma senha única compartilhada entre
+ * as avaliadoras. Sem pedir a senha atual, qualquer pessoa que encontre
+ * o endereço do painel consegue trocar essa senha compartilhada sem
+ * provar que já a conhecia — ao contrário do "esqueci minha senha" da
+ * participante, que exige saber o e-mail de uma conta que já existe.
+ * Julia optou por manter igual ao fluxo da participante por enquanto;
+ * ver "Limitações conhecidas" no README.
+ */
+app.post("/api/auth/forgot-password", (req, res) => {
+  const { newPassword } = req.body || {};
+  if (!newPassword || String(newPassword).length < MIN_PASSWORD_LENGTH) {
+    return res
+      .status(400)
+      .json({ error: `A senha nova precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.` });
+  }
+
+  adminPassword = String(newPassword);
+  // Derruba todas as sessões abertas do painel — depois de trocar a
+  // senha, qualquer pessoa logada precisa entrar de novo com a senha
+  // nova (mesmo comportamento do "esqueci minha senha" da participante).
+  validTokens.clear();
+
+  res.status(200).json({ message: "Senha redefinida com sucesso." });
 });
 
 // Taxonomia (Monografia 1, Seção 3.3.2 / Tabelas 3.1-3.3)

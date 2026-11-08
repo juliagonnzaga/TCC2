@@ -4,31 +4,46 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   ? { executablePath: process.env.PW_CHROMIUM_PATH }
   : {};
 
+// Mesmo valor que o server.js usa por padrão (ver ADMIN_PASSWORD em
+// server.js) — usado tanto pro login normal quanto pra restaurar a
+// senha do painel depois do teste de "esqueci minha senha" abaixo.
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "pesquisa123";
+
 async function apiSetup() {
   const base = "http://localhost:3000";
-  const post = async (path, body) => {
+  const post = async (path, body, token) => {
     const res = await fetch(base + path, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify(body || {}),
     });
     return res.json();
   };
-  const { consentId } = await post("/api/consent");
-  const { code } = await post("/api/profile", {
-    consentId,
-    ageRange: "18-24",
-    network: "Instagram",
+  // Sprint 5: participante agora se cadastra com e-mail/senha (em vez de
+  // TCLE + código anônimo) para poder enviar recomendações.
+  //
+  // Sprint 5, revisado: o aceite do TCLE virou uma chamada própria,
+  // separada do cadastro — sem ela, o envio de recomendação é bloqueado
+  // (403), então precisa ser chamada aqui antes do POST de recomendação.
+  const { token } = await post("/api/participants/register", {
+    email: `participante-admin-${Date.now()}@example.com`,
+    password: "senha123",
   });
-  await post("/api/recommendations", {
-    code,
-    link: "https://www.instagram.com/reel/paraadmin",
-    network: "Instagram",
-    format: "Reels",
-    appearedAt: "2026-09-29",
-    reason: "Aparece muito treino puxado",
-  });
-  return code;
+  await post("/api/participants/accept-tcle", {}, token);
+  await post(
+    "/api/recommendations",
+    {
+      link: "https://www.instagram.com/reel/paraadmin",
+      network: "Instagram",
+      format: "Reels",
+      appearedAt: "2026-09-29",
+      reason: "Aparece muito treino puxado",
+    },
+    token
+  );
 }
 
 (async () => {
@@ -58,8 +73,46 @@ async function runFlow(browser) {
   await page.click('#login-form button[type=submit]');
   await page.waitForSelector("#login-error:not([hidden])");
 
+  // "Esqueci minha senha" (pedido da Julia): redefine a senha
+  // compartilhada do painel, confirma o modal de feedback e confirma
+  // que a senha nova já funciona pra entrar. Depois restaura a senha
+  // original direto pela API (sem UI), pra não atrapalhar os outros
+  // arquivos de teste, que esperam a senha padrão de sempre.
+  await page.click("#btn-admin-forgot-password");
+  await page.waitForSelector("#admin-screen-reset-password:not([hidden])");
+  await page.fill("#admin-reset-new-password", "senhaNovaDoPainel456");
+  await page.fill("#admin-reset-confirm-password", "senhaNovaDoPainel456");
+  await page.click('#admin-reset-password-form button[type=submit]');
+  await page.waitForSelector("#admin-reset-password-success-modal:not([hidden])");
+  await page.click("#btn-admin-reset-modal-login");
+  await page.waitForSelector("#admin-reset-password-success-modal", { state: "hidden" });
+  await page.waitForSelector("#admin-screen-login:not([hidden])");
+
+  await page.fill("#login-password", "senhaNovaDoPainel456");
+  await page.click('#login-form button[type=submit]');
+  await page.waitForSelector("#admin-screen-evaluator:not([hidden])");
+
+  const restoreRes = await fetch("http://localhost:3000/api/auth/forgot-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ newPassword: ADMIN_PASSWORD }),
+  });
+  if (!restoreRes.ok) {
+    throw new Error("Não foi possível restaurar a senha original do painel depois do teste de \"esqueci minha senha\".");
+  }
+
+  // A redefinição acima derruba todas as sessões (inclusive a que acabamos
+  // de abrir). Volta pra tela de login chamando a própria função do
+  // admin.js (em vez de recarregar a página): o Chromium usado aqui
+  // restaura o estado anterior das telas num reload/goto — o que não é
+  // bug do sistema, é só uma particularidade deste navegador automatizado
+  // — então um reload deixaria a tela de "escolha de avaliadora" visível
+  // por engano, mesmo com a sessão já invalidada.
+  await page.evaluate(() => showAdminScreen("login"));
+  await page.waitForSelector("#admin-screen-login:not([hidden])");
+
   // Login correto
-  await page.fill("#login-password", "pesquisa123");
+  await page.fill("#login-password", ADMIN_PASSWORD);
   await page.click('#login-form button[type=submit]');
   await page.waitForSelector("#admin-screen-evaluator:not([hidden])");
   await page.screenshot({ path: "shot-admin-1-evaluator.png" });

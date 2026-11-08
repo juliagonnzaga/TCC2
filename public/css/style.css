@@ -5,6 +5,7 @@
   --color-text-muted: #6b6579;
   --color-primary: #7b3fe4;
   --color-primary-dark: #6529c9;
+  --color-accent: #d1558f;
   --color-border: #e3ddec;
   --color-error: #c22e4c;
   --radius: 14px;
@@ -31,6 +32,16 @@ body {
   padding: 24px 16px;
 }
 
+/* Mesmo bug de cascata já visto com .modal-overlay e .btn-toggle-auth:
+   sem isso, o display:flex acima venceria o display:none padrão do
+   atributo [hidden], e as telas do painel (login/redefinir senha/
+   escolha de avaliadora) ficariam todas desenhadas ao mesmo tempo,
+   empilhadas verticalmente (só não ficava visível na primeira tela
+   porque sobrava abaixo da dobra, fora da viewport). */
+.app-shell[hidden] {
+  display: none;
+}
+
 .card {
   width: 100%;
   max-width: 480px;
@@ -51,6 +62,66 @@ body {
   font-weight: 600;
   color: var(--color-primary);
   margin: 0 0 8px;
+}
+
+/* Identidade visual da tela de login (pedido da Julia): um selo com o
+   ícone do projeto + o título da pesquisa, pra dar identidade antes da
+   participante entrar — aparece só na tela de login, não nas outras. */
+.brand-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.brand-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px rgba(123, 63, 228, 0.28);
+  margin-bottom: 14px;
+}
+
+.brand-name {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-text);
+  margin: 0 0 6px;
+}
+
+.brand-tagline {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 360px;
+}
+
+/* Acesso ao painel da pesquisadora, discreto por design: linha fininha
+   separada por uma borda, só texto, sem aparência de botão — pra não
+   disputar atenção com "Criar conta" / "Entrar". */
+.researcher-access {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.researcher-access a {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.researcher-access a:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 
 h1 {
@@ -221,6 +292,22 @@ textarea {
   color: var(--color-primary);
 }
 
+.btn-toggle-auth,
+.btn-logout {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin: 16px 0 0;
+}
+
+/* Mesmo motivo do .modal-overlay[hidden] acima: sem isso, o display:block
+   da regra acima venceria o display:none padrão do atributo [hidden], e
+   os dois botões (entrar/cadastrar) apareceriam ao mesmo tempo. */
+.btn-toggle-auth[hidden],
+.btn-logout[hidden] {
+  display: none;
+}
+
 .steps {
   padding-left: 20px;
   margin: 0 0 24px;
@@ -237,17 +324,6 @@ textarea {
   font-size: 12.5px;
   color: var(--color-text-muted);
   margin-top: 14px;
-}
-
-#screen-code {
-  text-align: center;
-}
-
-#anonymous-code {
-  font-size: 40px;
-  letter-spacing: 0.04em;
-  color: var(--color-primary);
-  margin: 12px 0 20px;
 }
 
 .rec-list {

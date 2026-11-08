@@ -1,32 +1,56 @@
 /**
  * TCC2 - Sistema web de coleta de recomendações
  *
- * Sprint 1 - fluxo: TCLE -> código anônimo -> instruções
- * Sprint 2 - fluxo: instruções -> envio de recomendação (link) -> status
+ * Sprint 1-4: fluxo era TCLE -> código anônimo -> instruções -> envio ->
+ * status.
  *
- * NOTA (orientação do professor): a tela de perfil mínimo anônimo
- * (faixa etária + rede social) foi retirada por enquanto — essa parte
- * não deve ser desenvolvida agora. O código anônimo é gerado
- * automaticamente assim que o TCLE é aceito (ver handler do
- * #btn-accept-tcle abaixo), sem pedir esses dados demográficos. O
- * endpoint /api/profile no back-end continua existindo e aceitando
- * ageRange/network OPCIONALMENTE, para o caso de essa tela voltar
- * depois — mas hoje é chamado só com o consentId.
+ * Sprint 5 (orientação do professor): o "código anônimo" foi substituído
+ * por uma conta de verdade da participante (e-mail + senha).
+ *
+ * Sprint 5, revisado: login/cadastro e aceite do TCLE viraram duas
+ * etapas separadas (antes ficavam juntas na mesma tela). O fluxo agora
+ * é: login/cadastro -> TCLE -> instruções -> envio -> status. O aceite
+ * do TCLE é registrado por conta (`tcleAccepted`, vindo do back-end), não
+ * por sessão — então uma participante que já aceitou antes pula direto
+ * de login pras instruções, em qualquer dispositivo.
  *
  * Estado da sessão fica em memória + localStorage (para sobreviver a um
- * refresh de página durante o teste manual). Nada disso é dado
- * identificável: apenas consentId, o código anônimo e as recomendações
- * já enviadas (que também não têm dados identificáveis da participante).
+ * refresh de página). Guardamos só o token de sessão e o e-mail (que a
+ * própria participante digitou) — nunca a senha. Já o `tcleAccepted` só
+ * fica em memória (não precisa sobreviver a refresh por conta própria:
+ * resumeSession() busca o valor certo de novo em /api/participants/me).
  */
 
 const state = {
-  consentId: localStorage.getItem("consentId") || null,
-  anonymousCode: localStorage.getItem("anonymousCode") || null,
+  token: localStorage.getItem("participantToken") || null,
+  email: localStorage.getItem("participantEmail") || null,
+  tcleAccepted: false,
 };
 
+function saveSession(token, email, tcleAccepted) {
+  state.token = token;
+  state.email = email;
+  state.tcleAccepted = !!tcleAccepted;
+  localStorage.setItem("participantToken", token);
+  localStorage.setItem("participantEmail", email);
+}
+
+function clearSession() {
+  state.token = null;
+  state.email = null;
+  state.tcleAccepted = false;
+  localStorage.removeItem("participantToken");
+  localStorage.removeItem("participantEmail");
+}
+
+function authHeaders() {
+  return { Authorization: `Bearer ${state.token}` };
+}
+
 const screens = {
-  welcome: document.getElementById("screen-welcome"),
-  code: document.getElementById("screen-code"),
+  login: document.getElementById("screen-login"),
+  "reset-password": document.getElementById("screen-reset-password"),
+  tcle: document.getElementById("screen-tcle"),
   instructions: document.getElementById("screen-instructions"),
   submit: document.getElementById("screen-submit"),
   status: document.getElementById("screen-status"),
@@ -35,10 +59,13 @@ const screens = {
 // Tela anterior de cada tela, usada pelo botão "← Voltar". É um mapa fixo
 // (não uma pilha de histórico) porque o fluxo da participante é linear e
 // isso também funciona certo depois de um refresh de página (ver
-// resumeSession() no final do arquivo).
+// resumeSession() no final do arquivo). "Esqueci minha senha" é uma
+// ramificação fora da numeração principal, mas volta pro mesmo lugar
+// (login).
 const BACK_TARGETS = {
-  code: "welcome",
-  instructions: "code",
+  "reset-password": "login",
+  tcle: "login",
+  instructions: "tcle",
   submit: "instructions",
   status: "submit",
 };
@@ -46,38 +73,13 @@ const BACK_TARGETS = {
 function showScreen(name) {
   Object.values(screens).forEach((el) => (el.hidden = true));
   screens[name].hidden = false;
-  if (name === "welcome") {
-    renderWelcomeScreen();
+  if (name === "login") {
+    renderLoginScreen();
+  }
+  if (name === "tcle") {
+    renderTcleScreen();
   }
 }
-
-// Ao voltar para a tela de boas-vindas depois que o código anônimo já foi
-// gerado, mostra um aviso + botão "Continuar" em vez do checkbox/"Aceitar"
-// de novo — senão a participante poderia reenviar o TCLE e gerar um
-// SEGUNDO código, perdendo o vínculo com recomendações já enviadas.
-function renderWelcomeScreen() {
-  const tcleFlow = document.getElementById("welcome-tcle-flow");
-  const alreadyDone = document.getElementById("welcome-already-done");
-  if (state.anonymousCode) {
-    tcleFlow.hidden = true;
-    alreadyDone.hidden = false;
-  } else {
-    tcleFlow.hidden = false;
-    alreadyDone.hidden = true;
-  }
-}
-
-document.getElementById("btn-welcome-continue").addEventListener("click", () => {
-  showScreen("code");
-});
-
-document.querySelectorAll(".btn-back-link").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const current = btn.closest(".screen").dataset.screen;
-    const target = BACK_TARGETS[current];
-    if (target) showScreen(target);
-  });
-});
 
 function showError(elId, message) {
   const el = document.getElementById(elId);
@@ -90,59 +92,246 @@ function hideError(elId) {
   el.hidden = true;
 }
 
-/* ---------- Tela 1: Boas-vindas + TCLE ---------- */
+/* ---------- Tela 1: Login / Cadastro ---------- */
 
+const registerForm = document.getElementById("register-form");
+const loginForm = document.getElementById("login-form");
+const btnShowLogin = document.getElementById("btn-show-login");
+const btnShowRegister = document.getElementById("btn-show-register");
+const btnForgotPassword = document.getElementById("btn-forgot-password");
+const loginAlreadyDone = document.getElementById("login-already-done");
+
+function setAuthMode(mode) {
+  const isLogin = mode === "login";
+  registerForm.hidden = isLogin;
+  loginForm.hidden = !isLogin;
+  btnShowLogin.hidden = isLogin;
+  btnShowRegister.hidden = !isLogin;
+}
+
+btnShowLogin.addEventListener("click", () => setAuthMode("login"));
+btnShowRegister.addEventListener("click", () => setAuthMode("register"));
+
+// Se a participante volta pra essa tela (pelo "← Voltar", a partir da
+// tela de TCLE) já estando logada nesta sessão, mostra um aviso +
+// "Continuar" em vez dos formulários de cadastro/login de novo.
+function renderLoginScreen() {
+  if (state.token) {
+    loginAlreadyDone.hidden = false;
+    registerForm.hidden = true;
+    loginForm.hidden = true;
+    btnShowLogin.hidden = true;
+    btnShowRegister.hidden = true;
+    btnForgotPassword.hidden = true;
+  } else {
+    loginAlreadyDone.hidden = true;
+    btnForgotPassword.hidden = false;
+    setAuthMode("register");
+  }
+}
+
+// "Continuar" depende de a conta já ter aceitado o TCLE antes ou não.
+document.getElementById("btn-login-continue").addEventListener("click", () => {
+  showScreen(state.tcleAccepted ? "instructions" : "tcle");
+});
+
+document.querySelectorAll(".btn-back-link:not(.btn-toggle-auth):not(.btn-logout)").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const current = btn.closest(".screen").dataset.screen;
+    const target = BACK_TARGETS[current];
+    if (target) showScreen(target);
+  });
+});
+
+registerForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  hideError("register-error");
+
+  const email = document.getElementById("register-email").value.trim();
+  const password = document.getElementById("register-password").value;
+  const registerBtn = registerForm.querySelector("button[type=submit]");
+  registerBtn.disabled = true;
+  registerBtn.textContent = "Criando...";
+
+  try {
+    const res = await fetch("/api/participants/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Não foi possível criar sua conta agora.");
+
+    saveSession(data.token, data.email, data.tcleAccepted);
+    showScreen(state.tcleAccepted ? "instructions" : "tcle");
+  } catch (err) {
+    showError("register-error", err.message);
+  } finally {
+    registerBtn.disabled = false;
+    registerBtn.textContent = "Criar conta";
+  }
+});
+
+loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  hideError("login-error");
+
+  const email = document.getElementById("login-email").value.trim();
+  const password = document.getElementById("login-password").value;
+  const loginBtn = loginForm.querySelector("button[type=submit]");
+  loginBtn.disabled = true;
+  loginBtn.textContent = "Entrando...";
+
+  try {
+    const res = await fetch("/api/participants/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Não foi possível entrar.");
+
+    saveSession(data.token, data.email, data.tcleAccepted);
+    showScreen(state.tcleAccepted ? "instructions" : "tcle");
+  } catch (err) {
+    showError("login-error", err.message);
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Entrar";
+  }
+});
+
+/* ---------- Esqueci minha senha (pedido da Julia) ---------- */
+
+const resetPasswordForm = document.getElementById("reset-password-form");
+const resetPasswordSuccessModal = document.getElementById("reset-password-success-modal");
+
+btnForgotPassword.addEventListener("click", () => {
+  hideError("reset-password-error");
+  resetPasswordForm.reset();
+  // Facilita a vida: já preenche o e-mail que a participante tiver
+  // digitado no formulário de cadastro ou de login, se tiver algum.
+  const typedEmail =
+    document.getElementById("register-email").value.trim() ||
+    document.getElementById("login-email").value.trim();
+  if (typedEmail) {
+    document.getElementById("reset-email").value = typedEmail;
+  }
+  showScreen("reset-password");
+});
+
+resetPasswordForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  hideError("reset-password-error");
+
+  const email = document.getElementById("reset-email").value.trim();
+  const newPassword = document.getElementById("reset-new-password").value;
+  const confirmPassword = document.getElementById("reset-confirm-password").value;
+
+  if (newPassword !== confirmPassword) {
+    showError("reset-password-error", "As senhas não coincidem.");
+    return;
+  }
+
+  const resetBtn = resetPasswordForm.querySelector("button[type=submit]");
+  resetBtn.disabled = true;
+  resetBtn.textContent = "Redefinindo...";
+
+  try {
+    const res = await fetch("/api/participants/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Não foi possível redefinir a senha agora.");
+
+    resetPasswordForm.reset();
+    resetPasswordSuccessModal.hidden = false;
+  } catch (err) {
+    showError("reset-password-error", err.message);
+  } finally {
+    resetBtn.disabled = false;
+    resetBtn.textContent = "Redefinir senha";
+  }
+});
+
+document.getElementById("btn-reset-modal-login").addEventListener("click", () => {
+  const resetEmail = document.getElementById("reset-email").value.trim();
+  resetPasswordSuccessModal.hidden = true;
+  showScreen("login");
+  setAuthMode("login");
+  if (resetEmail) {
+    document.getElementById("login-email").value = resetEmail;
+  }
+});
+
+/* ---------- Tela 2: TCLE ---------- */
+
+const tcleForm = document.getElementById("tcle-form");
 const tcleCheckbox = document.getElementById("tcle-checkbox");
 const acceptBtn = document.getElementById("btn-accept-tcle");
+const tcleAlreadyDone = document.getElementById("tcle-already-done");
 
 tcleCheckbox.addEventListener("change", () => {
   acceptBtn.disabled = !tcleCheckbox.checked;
 });
 
-acceptBtn.addEventListener("click", async () => {
-  hideError("welcome-error");
+// Segurança: se a participante voltar pra essa tela já tendo aceitado o
+// TCLE nesta conta (ex.: foi pra instruções e apertou "← Voltar" duas
+// vezes), mostra um aviso em vez do formulário de novo.
+function renderTcleScreen() {
+  if (state.tcleAccepted) {
+    tcleAlreadyDone.hidden = false;
+    tcleForm.hidden = true;
+  } else {
+    tcleAlreadyDone.hidden = true;
+    tcleForm.hidden = false;
+    tcleCheckbox.checked = false;
+    acceptBtn.disabled = true;
+  }
+}
+
+document.getElementById("btn-tcle-continue").addEventListener("click", () => {
+  showScreen("instructions");
+});
+
+tcleForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  hideError("tcle-error");
+
+  if (!tcleCheckbox.checked) {
+    showError("tcle-error", "É preciso concordar com o TCLE para continuar.");
+    return;
+  }
+  if (!state.token) {
+    showError("tcle-error", "Sua sessão não foi encontrada. Volte ao início e entre de novo.");
+    return;
+  }
+
   acceptBtn.disabled = true;
   acceptBtn.textContent = "Enviando...";
 
   try {
-    const res = await fetch("/api/consent", { method: "POST" });
-    if (!res.ok) throw new Error("Falha ao registrar o aceite do TCLE.");
-    const data = await res.json();
-
-    state.consentId = data.consentId;
-    localStorage.setItem("consentId", data.consentId);
-
-    // Tela de perfil mínimo anônimo retirada por enquanto (orientação do
-    // professor) — o código anônimo é gerado na hora, só com o
-    // consentId, sem pedir faixa etária/rede social.
-    const profileRes = await fetch("/api/profile", {
+    const res = await fetch("/api/participants/accept-tcle", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ consentId: data.consentId }),
+      headers: authHeaders(),
     });
-    const profileData = await profileRes.json();
-    if (!profileRes.ok) throw new Error(profileData.error || "Falha ao gerar o código anônimo.");
+    if (res.status === 401) {
+      handleExpiredSession();
+      return;
+    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Não foi possível registrar o aceite agora.");
 
-    state.anonymousCode = profileData.code;
-    localStorage.setItem("anonymousCode", profileData.code);
-    document.getElementById("anonymous-code").textContent = profileData.code;
-
-    showScreen("code");
+    state.tcleAccepted = true;
+    showScreen("instructions");
   } catch (err) {
-    showError(
-      "welcome-error",
-      "Não foi possível registrar seu aceite agora. Tente novamente."
-    );
+    showError("tcle-error", err.message);
   } finally {
-    acceptBtn.disabled = false;
+    acceptBtn.disabled = !tcleCheckbox.checked;
     acceptBtn.textContent = "Aceitar e continuar";
   }
-});
-
-/* ---------- Tela 2 -> 3: código gerado -> instruções ---------- */
-
-document.getElementById("btn-go-instructions").addEventListener("click", () => {
-  showScreen("instructions");
 });
 
 /* ---------- Tela 3 -> 4: Instruções -> Envio ---------- */
@@ -150,6 +339,15 @@ document.getElementById("btn-go-instructions").addEventListener("click", () => {
 document.getElementById("btn-start").addEventListener("click", () => {
   showScreen("submit");
 });
+
+/* ---------- Trata sessão expirada/invalidada em qualquer chamada autenticada ---------- */
+
+function handleExpiredSession() {
+  clearSession();
+  showScreen("login");
+  setAuthMode("login");
+  showError("login-error", "Sua sessão expirou. Faça login novamente.");
+}
 
 /* ---------- Tela 4: Envio de recomendação ---------- */
 
@@ -170,8 +368,8 @@ submitForm.addEventListener("submit", async (event) => {
     showError("submit-error", "Preencha todos os campos antes de enviar.");
     return;
   }
-  if (!state.anonymousCode) {
-    showError("submit-error", "Código anônimo não encontrado. Volte ao início.");
+  if (!state.token) {
+    showError("submit-error", "Sua sessão não foi encontrada. Volte ao início e entre de novo.");
     return;
   }
 
@@ -182,9 +380,8 @@ submitForm.addEventListener("submit", async (event) => {
   try {
     const res = await fetch("/api/recommendations", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({
-        code: state.anonymousCode,
         link,
         network: networkInput.value,
         format: formatInput.value,
@@ -192,6 +389,11 @@ submitForm.addEventListener("submit", async (event) => {
         reason,
       }),
     });
+
+    if (res.status === 401) {
+      handleExpiredSession();
+      return;
+    }
 
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Falha ao enviar a recomendação.");
@@ -254,10 +456,14 @@ async function refreshStatus() {
   const title = document.getElementById("status-title");
   list.innerHTML = "";
 
-  if (!state.anonymousCode) return;
+  if (!state.token) return;
 
   try {
-    const res = await fetch(`/api/recommendations/${state.anonymousCode}`);
+    const res = await fetch("/api/recommendations", { headers: authHeaders() });
+    if (res.status === 401) {
+      handleExpiredSession();
+      return;
+    }
     const data = await res.json();
 
     title.textContent = `Seus envios (${data.total} de ${data.max})`;
@@ -287,17 +493,26 @@ document.getElementById("btn-new-submission").addEventListener("click", () => {
   showScreen("submit");
 });
 
+document.getElementById("btn-logout").addEventListener("click", () => {
+  clearSession();
+  showScreen("login");
+});
+
 /* ---------- Retomar sessão em caso de refresh ---------- */
 
-(function resumeSession() {
-  if (state.anonymousCode) {
-    document.getElementById("anonymous-code").textContent = state.anonymousCode;
-    showScreen("instructions");
-  } else {
-    // Sem código ainda (ou um consentId "solto", de uma sessão
-    // interrompida antes do código ser gerado): volta para o início,
-    // já que a tela de perfil que existia nesse meio-tempo foi
-    // retirada.
-    showScreen("welcome");
+(async function resumeSession() {
+  if (!state.token) {
+    showScreen("login");
+    return;
+  }
+  try {
+    const res = await fetch("/api/participants/me", { headers: authHeaders() });
+    if (!res.ok) throw new Error("Sessão inválida.");
+    const data = await res.json();
+    state.tcleAccepted = !!data.tcleAccepted;
+    showScreen(state.tcleAccepted ? "instructions" : "tcle");
+  } catch (err) {
+    clearSession();
+    showScreen("login");
   }
 })();
