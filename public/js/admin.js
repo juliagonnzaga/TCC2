@@ -20,6 +20,10 @@ function authHeaders() {
 
 function showAdminScreen(name) {
   document.getElementById("admin-screen-login").hidden = name !== "login";
+<<<<<<< HEAD
+=======
+  document.getElementById("admin-screen-reset-password").hidden = name !== "reset-password";
+>>>>>>> Sprint1
   document.getElementById("admin-screen-evaluator").hidden = name !== "evaluator";
   document.getElementById("admin-panel").hidden = name !== "panel";
 }
@@ -67,6 +71,71 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
   }
 });
 
+<<<<<<< HEAD
+=======
+/* ---------- Esqueci minha senha (pedido da Julia) ---------- */
+
+const adminResetPasswordForm = document.getElementById("admin-reset-password-form");
+const adminResetPasswordSuccessModal = document.getElementById("admin-reset-password-success-modal");
+
+document.getElementById("btn-admin-forgot-password").addEventListener("click", () => {
+  hideError("admin-reset-password-error");
+  adminResetPasswordForm.reset();
+  showAdminScreen("reset-password");
+});
+
+document.getElementById("btn-admin-reset-back").addEventListener("click", () => {
+  showAdminScreen("login");
+});
+
+adminResetPasswordForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  hideError("admin-reset-password-error");
+
+  const newPassword = document.getElementById("admin-reset-new-password").value;
+  const confirmPassword = document.getElementById("admin-reset-confirm-password").value;
+
+  if (newPassword !== confirmPassword) {
+    showError("admin-reset-password-error", "As senhas não coincidem.");
+    return;
+  }
+
+  const resetBtn = adminResetPasswordForm.querySelector("button[type=submit]");
+  resetBtn.disabled = true;
+  resetBtn.textContent = "Redefinindo...";
+
+  try {
+    const res = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Não foi possível redefinir a senha agora.");
+
+    // A sessão atual (se houvesse uma) também foi derrubada no back-end
+    // junto com todas as outras — limpa o estado local também.
+    sessionStorage.removeItem("adminToken");
+    sessionStorage.removeItem("adminEvaluator");
+    adminState.token = null;
+    adminState.evaluator = null;
+
+    adminResetPasswordForm.reset();
+    adminResetPasswordSuccessModal.hidden = false;
+  } catch (err) {
+    showError("admin-reset-password-error", err.message);
+  } finally {
+    resetBtn.disabled = false;
+    resetBtn.textContent = "Redefinir senha";
+  }
+});
+
+document.getElementById("btn-admin-reset-modal-login").addEventListener("click", () => {
+  adminResetPasswordSuccessModal.hidden = true;
+  showAdminScreen("login");
+});
+
+>>>>>>> Sprint1
 /* ---------- Escolha de avaliadora ---------- */
 
 function chooseEvaluator(letter) {

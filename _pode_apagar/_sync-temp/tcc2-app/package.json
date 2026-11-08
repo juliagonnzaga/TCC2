@@ -1,0 +1,18 @@
+{
+  "name": "tcc2-sistema-web",
+  "version": "0.1.0",
+  "description": "Sistema web de coleta e categorização de recomendações de redes sociais - TCC2 (Julia Carlos Gonzaga, UFOP). Sprints 1-4: participante, painel da pesquisadora e testes (SUS).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "pretest": "node scripts/reset-data.js",
+    "test": "node tests/test-flow.js && node scripts/reset-data.js && node tests/test-admin-flow.js && node scripts/reset-data.js && node tests/test-acceptance.js && node scripts/reset-data.js && node tests/test-sus-flow.js && node scripts/reset-data.js && node tests/test-back-navigation.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  }
+}
