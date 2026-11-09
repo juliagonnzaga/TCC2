@@ -14,15 +14,6 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   page.on("console", (msg) => {
-<<<<<<< HEAD
-    if (msg.type() === "error") errors.push(msg.text());
-  });
-
-  await page.goto("http://localhost:3000", { waitUntil: "networkidle" });
-  await page.screenshot({ path: "shot-1-welcome.png" });
-
-  // Screen 1: TCLE
-=======
     // "Failed to load resource" é o próprio Chrome logando qualquer
     // fetch/XHR com status não-2xx como erro de console — inclusive
     // quando é a resposta ESPERADA de um teste que verifica rejeição
@@ -48,25 +39,12 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   await page.waitForSelector("#screen-tcle:not([hidden])");
   await page.screenshot({ path: "shot-2-tcle.png" });
 
->>>>>>> Sprint1
   const acceptBtn = page.locator("#btn-accept-tcle");
   if (!(await acceptBtn.isDisabled())) throw new Error("Aceitar deveria começar desabilitado");
   await page.check("#tcle-checkbox");
   if (await acceptBtn.isDisabled()) throw new Error("Aceitar deveria habilitar após marcar checkbox");
   await acceptBtn.click();
 
-<<<<<<< HEAD
-  // Tela de perfil mínimo anônimo foi retirada (orientação do
-  // professor) — aceitar o TCLE já gera e mostra o código direto.
-  await page.waitForSelector("#screen-code:not([hidden])");
-  const code = await page.locator("#anonymous-code").innerText();
-  if (!/^P\d{3}$/.test(code)) throw new Error(`Código anônimo com formato inesperado: ${code}`);
-  await page.screenshot({ path: "shot-2-code.png" });
-
-  // Screen 2 -> 3: instructions
-  await page.click("#btn-go-instructions");
-=======
->>>>>>> Sprint1
   await page.waitForSelector("#screen-instructions:not([hidden])");
   await page.screenshot({ path: "shot-3-instructions.png" });
 
@@ -82,14 +60,6 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   await page.screenshot({ path: "shot-4-submit.png" });
   await page.click('#submit-form button[type=submit]');
 
-<<<<<<< HEAD
-  await page.waitForFunction(
-    () => document.getElementById("submit-progress").textContent.includes("Recomendação enviada")
-  );
-
-  // Screen 4 -> 5: status dos envios
-  await page.click("#btn-view-status");
-=======
   // Modal de confirmação de envio (feedback após enviar)
   await page.waitForSelector("#submit-success-modal:not([hidden])");
   const modalMessage = await page.locator("#submit-success-message").innerText();
@@ -103,7 +73,6 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   // Screen 4 -> 5: status dos envios (via botão do modal)
   await page.click("#btn-modal-status");
   await page.waitForSelector("#submit-success-modal", { state: "hidden" });
->>>>>>> Sprint1
   await page.waitForSelector("#screen-status:not([hidden])");
   await page.waitForSelector(".rec-item");
   const itemCount = await page.locator(".rec-item").count();
@@ -112,22 +81,13 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   if (!statusTitle.includes("1 de 3")) throw new Error(`Título de status inesperado: ${statusTitle}`);
   await page.screenshot({ path: "shot-5-status.png" });
 
-<<<<<<< HEAD
-  // Volta pra tela de envio e confirma que o link enviado aparece na lista
-=======
   // Confirma que o link enviado aparece na lista
->>>>>>> Sprint1
   const firstLink = await page.locator(".rec-link").first().getAttribute("href");
   if (firstLink !== "https://www.instagram.com/reel/teste123") {
     throw new Error(`Link salvo não corresponde ao enviado: ${firstLink}`);
   }
 
   // Reload to confirm session resume (localStorage) lands back on instructions
-<<<<<<< HEAD
-  await page.reload({ waitUntil: "networkidle" });
-  await page.waitForSelector("#screen-instructions:not([hidden])");
-
-=======
   // (já aceitou o TCLE, então pula direto pra lá, não pra tela de TCLE de novo)
   await page.reload({ waitUntil: "networkidle" });
   await page.waitForSelector("#screen-instructions:not([hidden])");
@@ -190,16 +150,11 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   await page.click('#login-form button[type=submit]');
   await page.waitForSelector("#screen-instructions:not([hidden])");
 
->>>>>>> Sprint1
   if (errors.length) {
     console.error("Erros de console/página encontrados:", errors);
     process.exitCode = 1;
   } else {
-<<<<<<< HEAD
-    console.log("OK: fluxo completo da Sprint 1 funcionou de ponta a ponta. Código gerado:", code);
-=======
     console.log("OK: fluxo completo de login/cadastro + TCLE + envio (Sprints 1-5) funcionou de ponta a ponta. E-mail usado:", email);
->>>>>>> Sprint1
   }
 
   await browser.close();

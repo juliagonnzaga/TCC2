@@ -15,22 +15,14 @@ Recomenda-se de 3 a 5 testadoras (não precisam ser as participantes reais da pe
 
 Peça para a testadora executar, sem ajuda, nesta ordem:
 
-<<<<<<< HEAD
-1. **Aceitar participar da pesquisa.** ("Abra o link e entre na pesquisa.")
-=======
 1. **Aceitar participar da pesquisa e criar uma conta.** ("Abra o link, leia o termo e crie sua conta com e-mail e senha.")
->>>>>>> Sprint1
 2. **Chegar até a tela de instruções de coleta** e ler o que é pedido.
 3. **Enviar uma recomendação de teste**, usando qualquer link de post/Reels (pode ser um link qualquer, não precisa ser real) e preenchendo rede, formato, data e o motivo.
 4. **Conferir o status dos próprios envios** (quantos de 3 já foram enviados).
 
 Observe, sem interferir, se ela:
 - hesita em algum ponto ou pergunta "e agora?";
-<<<<<<< HEAD
-- entende o que o código anônimo significa e por que precisa guardá-lo;
-=======
 - entende por que precisa criar uma conta (e-mail/senha) para participar, e se o texto explica isso de forma clara;
->>>>>>> Sprint1
 - entende por que está colando um link em vez de enviar um print;
 - comete algum erro de preenchimento (e se percebe sozinha).
 

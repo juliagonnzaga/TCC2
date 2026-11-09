@@ -1,34 +1,6 @@
 /**
  * TCC2 - Sistema web de coleta de recomendações
  *
-<<<<<<< HEAD
- * Sprint 1 - fluxo: TCLE -> código anônimo -> instruções
- * Sprint 2 - fluxo: instruções -> envio de recomendação (link) -> status
- *
- * NOTA (orientação do professor): a tela de perfil mínimo anônimo
- * (faixa etária + rede social) foi retirada por enquanto — essa parte
- * não deve ser desenvolvida agora. O código anônimo é gerado
- * automaticamente assim que o TCLE é aceito (ver handler do
- * #btn-accept-tcle abaixo), sem pedir esses dados demográficos. O
- * endpoint /api/profile no back-end continua existindo e aceitando
- * ageRange/network OPCIONALMENTE, para o caso de essa tela voltar
- * depois — mas hoje é chamado só com o consentId.
- *
- * Estado da sessão fica em memória + localStorage (para sobreviver a um
- * refresh de página durante o teste manual). Nada disso é dado
- * identificável: apenas consentId, o código anônimo e as recomendações
- * já enviadas (que também não têm dados identificáveis da participante).
- */
-
-const state = {
-  consentId: localStorage.getItem("consentId") || null,
-  anonymousCode: localStorage.getItem("anonymousCode") || null,
-};
-
-const screens = {
-  welcome: document.getElementById("screen-welcome"),
-  code: document.getElementById("screen-code"),
-=======
  * Sprint 1-4: fluxo era TCLE -> código anônimo -> instruções -> envio ->
  * status.
  *
@@ -79,17 +51,11 @@ const screens = {
   login: document.getElementById("screen-login"),
   "reset-password": document.getElementById("screen-reset-password"),
   tcle: document.getElementById("screen-tcle"),
->>>>>>> Sprint1
   instructions: document.getElementById("screen-instructions"),
   submit: document.getElementById("screen-submit"),
   status: document.getElementById("screen-status"),
 };
 
-<<<<<<< HEAD
-function showScreen(name) {
-  Object.values(screens).forEach((el) => (el.hidden = true));
-  screens[name].hidden = false;
-=======
 // Tela anterior de cada tela, usada pelo botão "← Voltar". É um mapa fixo
 // (não uma pilha de histórico) porque o fluxo da participante é linear e
 // isso também funciona certo depois de um refresh de página (ver
@@ -113,7 +79,6 @@ function showScreen(name) {
   if (name === "tcle") {
     renderTcleScreen();
   }
->>>>>>> Sprint1
 }
 
 function showError(elId, message) {
@@ -127,12 +92,6 @@ function hideError(elId) {
   el.hidden = true;
 }
 
-<<<<<<< HEAD
-/* ---------- Tela 1: Boas-vindas + TCLE ---------- */
-
-const tcleCheckbox = document.getElementById("tcle-checkbox");
-const acceptBtn = document.getElementById("btn-accept-tcle");
-=======
 /* ---------- Tela 1: Login / Cadastro ---------- */
 
 const registerForm = document.getElementById("register-form");
@@ -313,16 +272,11 @@ const tcleForm = document.getElementById("tcle-form");
 const tcleCheckbox = document.getElementById("tcle-checkbox");
 const acceptBtn = document.getElementById("btn-accept-tcle");
 const tcleAlreadyDone = document.getElementById("tcle-already-done");
->>>>>>> Sprint1
 
 tcleCheckbox.addEventListener("change", () => {
   acceptBtn.disabled = !tcleCheckbox.checked;
 });
 
-<<<<<<< HEAD
-acceptBtn.addEventListener("click", async () => {
-  hideError("welcome-error");
-=======
 // Segurança: se a participante voltar pra essa tela já tendo aceitado o
 // TCLE nesta conta (ex.: foi pra instruções e apertou "← Voltar" duas
 // vezes), mostra um aviso em vez do formulário de novo.
@@ -355,43 +309,10 @@ tcleForm.addEventListener("submit", async (event) => {
     return;
   }
 
->>>>>>> Sprint1
   acceptBtn.disabled = true;
   acceptBtn.textContent = "Enviando...";
 
   try {
-<<<<<<< HEAD
-    const res = await fetch("/api/consent", { method: "POST" });
-    if (!res.ok) throw new Error("Falha ao registrar o aceite do TCLE.");
-    const data = await res.json();
-
-    state.consentId = data.consentId;
-    localStorage.setItem("consentId", data.consentId);
-
-    // Tela de perfil mínimo anônimo retirada por enquanto (orientação do
-    // professor) — o código anônimo é gerado na hora, só com o
-    // consentId, sem pedir faixa etária/rede social.
-    const profileRes = await fetch("/api/profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ consentId: data.consentId }),
-    });
-    const profileData = await profileRes.json();
-    if (!profileRes.ok) throw new Error(profileData.error || "Falha ao gerar o código anônimo.");
-
-    state.anonymousCode = profileData.code;
-    localStorage.setItem("anonymousCode", profileData.code);
-    document.getElementById("anonymous-code").textContent = profileData.code;
-
-    showScreen("code");
-  } catch (err) {
-    showError(
-      "welcome-error",
-      "Não foi possível registrar seu aceite agora. Tente novamente."
-    );
-  } finally {
-    acceptBtn.disabled = false;
-=======
     const res = await fetch("/api/participants/accept-tcle", {
       method: "POST",
       headers: authHeaders(),
@@ -409,28 +330,16 @@ tcleForm.addEventListener("submit", async (event) => {
     showError("tcle-error", err.message);
   } finally {
     acceptBtn.disabled = !tcleCheckbox.checked;
->>>>>>> Sprint1
     acceptBtn.textContent = "Aceitar e continuar";
   }
 });
 
-<<<<<<< HEAD
-/* ---------- Tela 2 -> 3: código gerado -> instruções ---------- */
-
-document.getElementById("btn-go-instructions").addEventListener("click", () => {
-  showScreen("instructions");
-});
-
-=======
->>>>>>> Sprint1
 /* ---------- Tela 3 -> 4: Instruções -> Envio ---------- */
 
 document.getElementById("btn-start").addEventListener("click", () => {
   showScreen("submit");
 });
 
-<<<<<<< HEAD
-=======
 /* ---------- Trata sessão expirada/invalidada em qualquer chamada autenticada ---------- */
 
 function handleExpiredSession() {
@@ -440,7 +349,6 @@ function handleExpiredSession() {
   showError("login-error", "Sua sessão expirou. Faça login novamente.");
 }
 
->>>>>>> Sprint1
 /* ---------- Tela 4: Envio de recomendação ---------- */
 
 const submitForm = document.getElementById("submit-form");
@@ -460,13 +368,8 @@ submitForm.addEventListener("submit", async (event) => {
     showError("submit-error", "Preencha todos os campos antes de enviar.");
     return;
   }
-<<<<<<< HEAD
-  if (!state.anonymousCode) {
-    showError("submit-error", "Código anônimo não encontrado. Volte ao início.");
-=======
   if (!state.token) {
     showError("submit-error", "Sua sessão não foi encontrada. Volte ao início e entre de novo.");
->>>>>>> Sprint1
     return;
   }
 
@@ -477,14 +380,8 @@ submitForm.addEventListener("submit", async (event) => {
   try {
     const res = await fetch("/api/recommendations", {
       method: "POST",
-<<<<<<< HEAD
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        code: state.anonymousCode,
-=======
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({
->>>>>>> Sprint1
         link,
         network: networkInput.value,
         format: formatInput.value,
@@ -493,30 +390,17 @@ submitForm.addEventListener("submit", async (event) => {
       }),
     });
 
-<<<<<<< HEAD
-=======
     if (res.status === 401) {
       handleExpiredSession();
       return;
     }
 
->>>>>>> Sprint1
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Falha ao enviar a recomendação.");
 
     submitForm.reset();
-<<<<<<< HEAD
-
-    if (data.remaining <= 0) {
-      await refreshStatus();
-      showScreen("status");
-    } else {
-      submitProgress.textContent = `Recomendação enviada! Você ainda pode enviar mais ${data.remaining} (até ${data.totalForParticipant + data.remaining} no total).`;
-    }
-=======
     submitProgress.textContent = "Cole o link do post ou Reels que apareceu para você.";
     showSubmitSuccessModal(data.remaining, data.totalForParticipant);
->>>>>>> Sprint1
   } catch (err) {
     showError("submit-error", err.message);
   } finally {
@@ -530,8 +414,6 @@ document.getElementById("btn-view-status").addEventListener("click", async () =>
   showScreen("status");
 });
 
-<<<<<<< HEAD
-=======
 /* ---------- Modal de confirmação de envio ---------- */
 
 const submitSuccessModal = document.getElementById("submit-success-modal");
@@ -566,7 +448,6 @@ document.getElementById("btn-modal-status").addEventListener("click", async () =
   showScreen("status");
 });
 
->>>>>>> Sprint1
 /* ---------- Tela 5: Status dos envios ---------- */
 
 async function refreshStatus() {
@@ -575,12 +456,6 @@ async function refreshStatus() {
   const title = document.getElementById("status-title");
   list.innerHTML = "";
 
-<<<<<<< HEAD
-  if (!state.anonymousCode) return;
-
-  try {
-    const res = await fetch(`/api/recommendations/${state.anonymousCode}`);
-=======
   if (!state.token) return;
 
   try {
@@ -589,7 +464,6 @@ async function refreshStatus() {
       handleExpiredSession();
       return;
     }
->>>>>>> Sprint1
     const data = await res.json();
 
     title.textContent = `Seus envios (${data.total} de ${data.max})`;
@@ -619,20 +493,6 @@ document.getElementById("btn-new-submission").addEventListener("click", () => {
   showScreen("submit");
 });
 
-<<<<<<< HEAD
-/* ---------- Retomar sessão em caso de refresh ---------- */
-
-(function resumeSession() {
-  if (state.anonymousCode) {
-    document.getElementById("anonymous-code").textContent = state.anonymousCode;
-    showScreen("instructions");
-  } else {
-    // Sem código ainda (ou um consentId "solto", de uma sessão
-    // interrompida antes do código ser gerado): volta para o início,
-    // já que a tela de perfil que existia nesse meio-tempo foi
-    // retirada.
-    showScreen("welcome");
-=======
 document.getElementById("btn-logout").addEventListener("click", () => {
   clearSession();
   showScreen("login");
@@ -654,6 +514,5 @@ document.getElementById("btn-logout").addEventListener("click", () => {
   } catch (err) {
     clearSession();
     showScreen("login");
->>>>>>> Sprint1
   }
 })();

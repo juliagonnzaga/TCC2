@@ -5,10 +5,7 @@
   --color-text-muted: #6b6579;
   --color-primary: #7b3fe4;
   --color-primary-dark: #6529c9;
-<<<<<<< HEAD
-=======
   --color-accent: #d1558f;
->>>>>>> Sprint1
   --color-border: #e3ddec;
   --color-error: #c22e4c;
   --radius: 14px;
@@ -35,8 +32,6 @@ body {
   padding: 24px 16px;
 }
 
-<<<<<<< HEAD
-=======
 /* Mesmo bug de cascata já visto com .modal-overlay e .btn-toggle-auth:
    sem isso, o display:flex acima venceria o display:none padrão do
    atributo [hidden], e as telas do painel (login/redefinir senha/
@@ -47,7 +42,6 @@ body {
   display: none;
 }
 
->>>>>>> Sprint1
 .card {
   width: 100%;
   max-width: 480px;
@@ -70,8 +64,6 @@ body {
   margin: 0 0 8px;
 }
 
-<<<<<<< HEAD
-=======
 /* Identidade visual da tela de login (pedido da Julia): um selo com o
    ícone do projeto + o título da pesquisa, pra dar identidade antes da
    participante entrar — aparece só na tela de login, não nas outras. */
@@ -132,7 +124,6 @@ body {
   text-decoration: underline;
 }
 
->>>>>>> Sprint1
 h1 {
   font-size: 22px;
   margin: 0 0 12px;
@@ -285,8 +276,6 @@ textarea {
   margin-top: 10px;
 }
 
-<<<<<<< HEAD
-=======
 .btn-back-link {
   display: inline-block;
   background: none;
@@ -319,7 +308,6 @@ textarea {
   display: none;
 }
 
->>>>>>> Sprint1
 .steps {
   padding-left: 20px;
   margin: 0 0 24px;
@@ -338,20 +326,6 @@ textarea {
   margin-top: 14px;
 }
 
-<<<<<<< HEAD
-#screen-code {
-  text-align: center;
-}
-
-#anonymous-code {
-  font-size: 40px;
-  letter-spacing: 0.04em;
-  color: var(--color-primary);
-  margin: 12px 0 20px;
-}
-
-=======
->>>>>>> Sprint1
 .rec-list {
   list-style: none;
   margin: 0 0 16px;
@@ -412,8 +386,6 @@ textarea {
   text-align: center;
 }
 
-<<<<<<< HEAD
-=======
 /* ===================== Modal de confirmação de envio ===================== */
 
 .modal-overlay {
@@ -493,7 +465,6 @@ textarea {
   margin-top: 0;
 }
 
->>>>>>> Sprint1
 /* ===================== Painel da pesquisadora (admin) ===================== */
 
 .admin-body {

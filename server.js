@@ -1,22 +1,12 @@
 /**
  * TCC2 - Sistema web de coleta de recomendações
  *
-<<<<<<< HEAD
- * Sprint 1: Fundação e fluxo inicial da participante
- *  - Serviço de registro do aceite do TCLE     (POST /api/consent)
- *  - Serviço de geração do código anônimo      (POST /api/profile)
- *
- * Sprint 2: Coleta de recomendações
- *  - Serviço de recebimento da recomendação    (POST /api/recommendations)
- *  - Serviço de consulta dos envios            (GET  /api/recommendations/:code)
-=======
  * Sprint 1 (substituída na Sprint 5 — ver nota abaixo): Fundação e fluxo
  * inicial da participante, com TCLE + código anônimo.
  *
  * Sprint 2: Coleta de recomendações
  *  - Serviço de recebimento da recomendação    (POST /api/recommendations)
  *  - Serviço de consulta dos envios            (GET  /api/recommendations)
->>>>>>> Sprint1
  *
  * Sprint 3: Painel da pesquisadora
  *  - Serviço de autenticação                   (POST /api/auth/login)
@@ -34,8 +24,6 @@
  *  - Testes funcionais automatizados cobrindo os critérios de aceitação
  *    de cada User Story (ver tests/test-acceptance.js)
  *
-<<<<<<< HEAD
-=======
  * Sprint 5 (orientação do professor): o fluxo de "aceitar TCLE -> gerar
  * código anônimo" (POST /api/consent + POST /api/profile) foi SUBSTITUÍDO
  * por um cadastro/login de verdade da participante, com e-mail e senha
@@ -52,7 +40,6 @@
  * que as avaliadoras continuem sem acesso à identidade de quem enviou
  * cada conteúdo (ver "Limitações conhecidas" no README).
  *
->>>>>>> Sprint1
  * IMPORTANTE (mudança de protocolo combinada com a orientação): a partir
  * da Sprint 2, a coleta passou de "print anonimizado" para "link do
  * post/reels", para reduzir a fricção da participante. Isso remove a
@@ -63,13 +50,9 @@
  * Armazenamento: arquivos JSON locais em ./data (suficiente para o MVP).
  * Antes da coleta real com participantes, isso deve ser substituído por
  * armazenamento cifrado, conforme já indicado na metodologia (Seção
-<<<<<<< HEAD
- * 3.5.2 / Trabalhos Futuros da Monografia 1).
-=======
  * 3.5.2 / Trabalhos Futuros da Monografia 1) — isso vale especialmente
  * agora que o cadastro guarda e-mail (mesmo com a senha com hash, nunca
  * em texto puro).
->>>>>>> Sprint1
  */
 
 const express = require("express");
@@ -81,24 +64,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const DATA_DIR = path.join(__dirname, "data");
-<<<<<<< HEAD
-const CONSENTS_FILE = path.join(DATA_DIR, "consents.json");
-const PROFILES_FILE = path.join(DATA_DIR, "profiles.json");
-=======
 const PARTICIPANTS_FILE = path.join(DATA_DIR, "participants.json");
->>>>>>> Sprint1
 const RECOMMENDATIONS_FILE = path.join(DATA_DIR, "recommendations.json");
 const CATEGORIZATIONS_FILE = path.join(DATA_DIR, "categorizations.json");
 const SUS_FILE = path.join(DATA_DIR, "sus.json");
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 for (const file of [
-<<<<<<< HEAD
-  CONSENTS_FILE,
-  PROFILES_FILE,
-=======
   PARTICIPANTS_FILE,
->>>>>>> Sprint1
   RECOMMENDATIONS_FILE,
   CATEGORIZATIONS_FILE,
   SUS_FILE,
@@ -122,37 +95,6 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 /**
-<<<<<<< HEAD
- * Sub-tarefa: "Serviço de registro do aceite do TCLE (back-end)"
- * Registra o aceite com timestamp e devolve um consentId, que a tela
- * de perfil (próxima etapa) precisa apresentar para gerar o código
- * anônimo — isso é o que garante, no back-end, que ninguém chega ao
- * perfil sem antes ter aceitado o TCLE.
- */
-app.post("/api/consent", (req, res) => {
-  const consents = readJSON(CONSENTS_FILE);
-  const consentId = crypto.randomUUID();
-  const record = { consentId, acceptedAt: new Date().toISOString() };
-  consents.push(record);
-  writeJSON(CONSENTS_FILE, consents);
-  res.status(201).json({ consentId });
-});
-
-/**
- * Sub-tarefa: "Serviço de geração do código anônimo (back-end)"
- * Recebe consentId (+ opcionalmente faixa etária e rede social), valida
- * que o TCLE foi aceito, e gera um código anônimo único (ex.: P427).
- * Nenhum dado identificável é solicitado ou armazenado.
- *
- * NOTA (orientação do professor, Sprint 3): a tela de perfil mínimo
- * anônimo (faixa etária + rede social) foi retirada do front-end por
- * enquanto — essa parte não deve ser desenvolvida agora. Por isso
- * ageRange e network passaram a ser OPCIONAIS aqui: o front (app.js)
- * chama este endpoint só com o consentId, logo após o aceite do TCLE,
- * para gerar o código sem pedir dados demográficos. Os campos
- * continuam aceitos (e validados, se enviados) para o caso de essa
- * tela voltar depois.
-=======
  * Sub-tarefa (Sprint 5): "Sistema de login da participante"
  *
  * Substitui o fluxo "aceitar TCLE -> gerar código anônimo" por uma
@@ -176,7 +118,6 @@ app.post("/api/consent", (req, res) => {
  * própria participante. Ele existe só para o painel da pesquisadora
  * continuar identificando os envios sem expor o e-mail às avaliadoras
  * (ver nota no topo do arquivo e "Limitações conhecidas" no README).
->>>>>>> Sprint1
  */
 function generateAnonymousCode(existingCodes) {
   let code;
@@ -187,45 +128,6 @@ function generateAnonymousCode(existingCodes) {
   return code;
 }
 
-<<<<<<< HEAD
-const VALID_AGE_RANGES = ["13-17", "18-24", "25-34", "35-44", "45+"];
-const VALID_NETWORKS = ["Instagram", "TikTok", "Outra"];
-
-app.post("/api/profile", (req, res) => {
-  const { consentId, ageRange, network } = req.body || {};
-
-  if (!consentId) {
-    return res.status(400).json({ error: "consentId é obrigatório." });
-  }
-  if (ageRange && !VALID_AGE_RANGES.includes(ageRange)) {
-    return res.status(400).json({ error: "Faixa etária inválida." });
-  }
-  if (network && !VALID_NETWORKS.includes(network)) {
-    return res.status(400).json({ error: "Rede social inválida." });
-  }
-
-  const consents = readJSON(CONSENTS_FILE);
-  const consentExists = consents.some((c) => c.consentId === consentId);
-  if (!consentExists) {
-    return res
-      .status(400)
-      .json({ error: "TCLE ainda não foi aceito para este consentId." });
-  }
-
-  const profiles = readJSON(PROFILES_FILE);
-  const code = generateAnonymousCode(profiles.map((p) => p.code));
-  const record = {
-    code,
-    ageRange: ageRange || null,
-    network: network || null,
-    consentId,
-    createdAt: new Date().toISOString(),
-  };
-  profiles.push(record);
-  writeJSON(PROFILES_FILE, profiles);
-
-  res.status(201).json({ code });
-=======
 const VALID_NETWORKS = ["Instagram", "TikTok", "Outra"];
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -405,7 +307,6 @@ app.post("/api/participants/accept-tcle", requireParticipantAuth, (req, res) => 
     writeJSON(PARTICIPANTS_FILE, participants);
   }
   res.status(201).json({ tcleAccepted: true, acceptedAt: participants[idx].tcleAcceptedAt });
->>>>>>> Sprint1
 });
 
 /* ===================== Sprint 2: Coleta de recomendações ===================== */
@@ -424,20 +325,6 @@ function isValidUrl(value) {
 
 /**
  * Sub-tarefa: "Serviço de recebimento e armazenamento da recomendação (back-end)"
-<<<<<<< HEAD
- * Recebe o código anônimo da participante, o link do conteúdo, rede,
- * formato, data em que apareceu e o motivo percebido. Limita a 3
- * recomendações por participante, conforme o protocolo (Seção 3.3.1
- * da Monografia 1: "até três recomendações elegíveis").
- */
-app.post("/api/recommendations", (req, res) => {
-  const { code, link, network, format, appearedAt, reason } = req.body || {};
-
-  if (!code || !link || !network || !format || !appearedAt || !reason) {
-    return res.status(400).json({
-      error:
-        "code, link, network, format, appearedAt e reason são obrigatórios.",
-=======
  * Identifica a participante pelo token de login (Sprint 5 — antes era
  * pelo código anônimo enviado no corpo da requisição) e recebe o link
  * do conteúdo, rede, formato, data em que apareceu e o motivo
@@ -451,7 +338,6 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
   if (!link || !network || !format || !appearedAt || !reason) {
     return res.status(400).json({
       error: "link, network, format, appearedAt e reason são obrigatórios.",
->>>>>>> Sprint1
     });
   }
   if (!isValidUrl(link)) {
@@ -481,16 +367,6 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
       .json({ error: "Informe uma data válida, que não seja no futuro." });
   }
 
-<<<<<<< HEAD
-  const profiles = readJSON(PROFILES_FILE);
-  const participant = profiles.find((p) => p.code === code);
-  if (!participant) {
-    return res.status(400).json({ error: "Código anônimo não encontrado." });
-  }
-
-  const recommendations = readJSON(RECOMMENDATIONS_FILE);
-  const existingForParticipant = recommendations.filter((r) => r.code === code);
-=======
   const participants = readJSON(PARTICIPANTS_FILE);
   const participant = participants.find((p) => p.id === req.participantId);
   if (!participant) {
@@ -506,7 +382,6 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
   const existingForParticipant = recommendations.filter(
     (r) => r.participantId === participant.id
   );
->>>>>>> Sprint1
   if (existingForParticipant.length >= MAX_RECOMMENDATIONS_PER_PARTICIPANT) {
     return res.status(409).json({
       error: `Você já enviou ${MAX_RECOMMENDATIONS_PER_PARTICIPANT} recomendações, o máximo previsto pelo protocolo. Obrigada pela participação!`,
@@ -515,15 +390,11 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
 
   const record = {
     id: crypto.randomUUID(),
-<<<<<<< HEAD
-    code,
-=======
     participantId: participant.id,
     // Código interno (não é mais mostrado à participante, ver Sprint 5
     // no topo do arquivo) — é o que o painel da pesquisadora exibe, pra
     // avaliadora nunca ver o e-mail de quem enviou.
     code: participant.code,
->>>>>>> Sprint1
     link,
     network,
     format,
@@ -544,15 +415,6 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
 
 /**
  * Sub-tarefa: "Serviço de consulta dos envios (back-end)"
-<<<<<<< HEAD
- * Retorna as recomendações já enviadas por um código anônimo, para a
- * tela de status dos envios.
- */
-app.get("/api/recommendations/:code", (req, res) => {
-  const { code } = req.params;
-  const recommendations = readJSON(RECOMMENDATIONS_FILE).filter(
-    (r) => r.code === code
-=======
  * Retorna as recomendações já enviadas pela participante autenticada
  * (Sprint 5 — antes era por código anônimo na URL), para a tela de
  * status dos envios.
@@ -560,7 +422,6 @@ app.get("/api/recommendations/:code", (req, res) => {
 app.get("/api/recommendations", requireParticipantAuth, (req, res) => {
   const recommendations = readJSON(RECOMMENDATIONS_FILE).filter(
     (r) => r.participantId === req.participantId
->>>>>>> Sprint1
   );
   res.json({
     items: recommendations,
@@ -583,9 +444,6 @@ app.get("/api/recommendations", requireParticipantAuth, (req, res) => {
  * calcular concordância entre avaliadoras sem precisar de contas
  * separadas.
  */
-<<<<<<< HEAD
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "pesquisa123";
-=======
 // `let`, não `const`: pode ser trocada em tempo de execução pelo
 // "esqueci minha senha" do painel (ver POST /api/auth/forgot-password,
 // logo abaixo). A troca vale só até o servidor reiniciar — depois disso
@@ -593,7 +451,6 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "pesquisa123";
 // desenvolvimento), igual ao resto das sessões, que também são em
 // memória (ver "Limitações conhecidas" no README).
 let adminPassword = process.env.ADMIN_PASSWORD || "pesquisa123";
->>>>>>> Sprint1
 const ADMIN_EVALUATORS = ["A", "B"];
 const validTokens = new Set();
 
@@ -611,11 +468,7 @@ function requireAuth(req, res, next) {
  */
 app.post("/api/auth/login", (req, res) => {
   const { password } = req.body || {};
-<<<<<<< HEAD
-  if (password !== ADMIN_PASSWORD) {
-=======
   if (password !== adminPassword) {
->>>>>>> Sprint1
     return res.status(401).json({ error: "Senha incorreta." });
   }
   const token = crypto.randomUUID();
@@ -623,8 +476,6 @@ app.post("/api/auth/login", (req, res) => {
   res.json({ token, evaluators: ADMIN_EVALUATORS });
 });
 
-<<<<<<< HEAD
-=======
 /**
  * Sub-tarefa: "Esqueci minha senha" no painel da pesquisadora (pedido da
  * Julia, mesmo padrão do lado da participante: só pede a senha nova +
@@ -656,7 +507,6 @@ app.post("/api/auth/forgot-password", (req, res) => {
   res.status(200).json({ message: "Senha redefinida com sucesso." });
 });
 
->>>>>>> Sprint1
 // Taxonomia (Monografia 1, Seção 3.3.2 / Tabelas 3.1-3.3)
 const TAXONOMY = {
   "Aparência idealizada": [

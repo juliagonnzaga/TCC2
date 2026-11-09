@@ -4,14 +4,6 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   ? { executablePath: process.env.PW_CHROMIUM_PATH }
   : {};
 
-<<<<<<< HEAD
-async function apiSetup() {
-  const base = "http://localhost:3000";
-  const post = async (path, body) => {
-    const res = await fetch(base + path, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-=======
 // Mesmo valor que o server.js usa por padrão (ver ADMIN_PASSWORD em
 // server.js) — usado tanto pro login normal quanto pra restaurar a
 // senha do painel depois do teste de "esqueci minha senha" abaixo.
@@ -26,28 +18,10 @@ async function apiSetup() {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
->>>>>>> Sprint1
       body: JSON.stringify(body || {}),
     });
     return res.json();
   };
-<<<<<<< HEAD
-  const { consentId } = await post("/api/consent");
-  const { code } = await post("/api/profile", {
-    consentId,
-    ageRange: "18-24",
-    network: "Instagram",
-  });
-  await post("/api/recommendations", {
-    code,
-    link: "https://www.instagram.com/reel/paraadmin",
-    network: "Instagram",
-    format: "Reels",
-    appearedAt: "2026-09-29",
-    reason: "Aparece muito treino puxado",
-  });
-  return code;
-=======
   // Sprint 5: participante agora se cadastra com e-mail/senha (em vez de
   // TCLE + código anônimo) para poder enviar recomendações.
   //
@@ -70,7 +44,6 @@ async function apiSetup() {
     },
     token
   );
->>>>>>> Sprint1
 }
 
 (async () => {
@@ -100,10 +73,6 @@ async function runFlow(browser) {
   await page.click('#login-form button[type=submit]');
   await page.waitForSelector("#login-error:not([hidden])");
 
-<<<<<<< HEAD
-  // Login correto
-  await page.fill("#login-password", "pesquisa123");
-=======
   // "Esqueci minha senha" (pedido da Julia): redefine a senha
   // compartilhada do painel, confirma o modal de feedback e confirma
   // que a senha nova já funciona pra entrar. Depois restaura a senha
@@ -144,7 +113,6 @@ async function runFlow(browser) {
 
   // Login correto
   await page.fill("#login-password", ADMIN_PASSWORD);
->>>>>>> Sprint1
   await page.click('#login-form button[type=submit]');
   await page.waitForSelector("#admin-screen-evaluator:not([hidden])");
   await page.screenshot({ path: "shot-admin-1-evaluator.png" });

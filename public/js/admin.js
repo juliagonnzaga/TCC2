@@ -20,10 +20,7 @@ function authHeaders() {
 
 function showAdminScreen(name) {
   document.getElementById("admin-screen-login").hidden = name !== "login";
-<<<<<<< HEAD
-=======
   document.getElementById("admin-screen-reset-password").hidden = name !== "reset-password";
->>>>>>> Sprint1
   document.getElementById("admin-screen-evaluator").hidden = name !== "evaluator";
   document.getElementById("admin-panel").hidden = name !== "panel";
 }
@@ -71,8 +68,6 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
   }
 });
 
-<<<<<<< HEAD
-=======
 /* ---------- Esqueci minha senha (pedido da Julia) ---------- */
 
 const adminResetPasswordForm = document.getElementById("admin-reset-password-form");
@@ -135,7 +130,6 @@ document.getElementById("btn-admin-reset-modal-login").addEventListener("click",
   showAdminScreen("login");
 });
 
->>>>>>> Sprint1
 /* ---------- Escolha de avaliadora ---------- */
 
 function chooseEvaluator(letter) {

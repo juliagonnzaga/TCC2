@@ -11,67 +11,6 @@
   <main class="app-shell">
     <div class="card">
 
-<<<<<<< HEAD
-      <!-- ===================== TELA 1: Boas-vindas + TCLE ===================== -->
-      <!-- User story: Sistema de Boas-vindas e Consentimento (TCLE) -->
-      <section id="screen-welcome" class="screen" data-screen="welcome">
-        <p class="eyebrow">1 · Boas-vindas + TCLE</p>
-        <h1>Bem-vinda à pesquisa</h1>
-        <p class="lead">
-          Esta pesquisa busca entender que tipo de conteúdo as redes sociais
-          recomendam a mulheres, relacionado a corpo e aparência. Sua
-          participação é anônima e voluntária.
-        </p>
-
-        <div class="tcle-box" tabindex="0" aria-label="Termo de Consentimento Livre e Esclarecido">
-          <h2>Termo de Consentimento Livre e Esclarecido (TCLE)</h2>
-          <p>
-            <em>[Texto completo do TCLE aprovado pelo Comitê de Ética deve ser
-            inserido aqui antes da coleta real. Este é um texto de exemplo
-            para a Sprint 1.]</em>
-          </p>
-          <p>
-            Ao aceitar, você concorda em participar da coleta enviando
-            recomendações que recebeu em redes sociais, sem fornecer nome,
-            e-mail ou qualquer dado que possa te identificar. Você pode
-            interromper sua participação a qualquer momento, sem
-            justificativa.
-          </p>
-        </div>
-
-        <label class="checkbox-row">
-          <input type="checkbox" id="tcle-checkbox" />
-          <span>Li e concordo em participar</span>
-        </label>
-
-        <button id="btn-accept-tcle" class="btn btn-primary" disabled>
-          Aceitar e continuar
-        </button>
-
-        <p class="error-msg" id="welcome-error" hidden></p>
-      </section>
-
-      <!--
-        Tela de perfil mínimo anônimo (faixa etária + rede social)
-        retirada do front-end a pedido do orientador — essa parte não
-        deve ser desenvolvida por enquanto. O código anônimo abaixo
-        agora é gerado automaticamente assim que o TCLE é aceito, sem
-        pedir esses dados demográficos (ver nota em server.js, endpoint
-        POST /api/profile, e a seção "Limitações conhecidas" no README).
-      -->
-
-      <!-- ===================== TELA 2: Código anônimo gerado ===================== -->
-      <section id="screen-code" class="screen" data-screen="code" hidden>
-        <p class="eyebrow">Seu código anônimo</p>
-        <h1 id="anonymous-code">—</h1>
-        <p class="lead">
-          Guarde este código. Ele identifica sua participação sem revelar
-          quem você é.
-        </p>
-        <button id="btn-go-instructions" class="btn btn-primary">
-          Continuar
-        </button>
-=======
       <!-- ===================== TELA 1: Login / Cadastro ===================== -->
       <!-- User story (Sprint 5, revisado): Sistema de Login da Participante,
            como etapa própria, separada do aceite do TCLE (ver TELA 2). -->
@@ -263,16 +202,12 @@
             Continuar
           </button>
         </div>
->>>>>>> Sprint1
       </section>
 
       <!-- ===================== TELA 3: Instruções de coleta ===================== -->
       <!-- User story: Tela de Instruções de Coleta (sem back-end) -->
       <section id="screen-instructions" class="screen" data-screen="instructions" hidden>
-<<<<<<< HEAD
-=======
         <button type="button" class="btn-back-link">← Voltar</button>
->>>>>>> Sprint1
         <p class="eyebrow">3 · Instruções de coleta</p>
         <h1>Como participar</h1>
 
@@ -297,16 +232,10 @@
         </button>
       </section>
 
-<<<<<<< HEAD
-      <!-- ===================== TELA 4: Envio de recomendação ===================== -->
-      <!-- User story: Sistema de Envio de Recomendação -->
-      <section id="screen-submit" class="screen" data-screen="submit" hidden>
-=======
       <!-- ===================== TELA 3: Envio de recomendação ===================== -->
       <!-- User story: Sistema de Envio de Recomendação -->
       <section id="screen-submit" class="screen" data-screen="submit" hidden>
         <button type="button" class="btn-back-link">← Voltar</button>
->>>>>>> Sprint1
         <p class="eyebrow">4 · Enviar recomendação</p>
         <h1>Enviar recomendação</h1>
         <p class="lead" id="submit-progress">
@@ -388,16 +317,10 @@
         </button>
       </section>
 
-<<<<<<< HEAD
-      <!-- ===================== TELA 5: Status dos envios ===================== -->
-      <!-- User story: Sistema de Status dos Envios -->
-      <section id="screen-status" class="screen" data-screen="status" hidden>
-=======
       <!-- ===================== TELA 4: Status dos envios ===================== -->
       <!-- User story: Sistema de Status dos Envios -->
       <section id="screen-status" class="screen" data-screen="status" hidden>
         <button type="button" class="btn-back-link">← Voltar</button>
->>>>>>> Sprint1
         <p class="eyebrow">5 · Seus envios</p>
         <h1 id="status-title">Seus envios</h1>
 
@@ -410,22 +333,14 @@
         <button id="btn-new-submission" class="btn btn-primary">
           Enviar nova recomendação
         </button>
-<<<<<<< HEAD
-=======
 
         <button type="button" id="btn-logout" class="btn-back-link btn-logout">
           Sair da conta
         </button>
->>>>>>> Sprint1
       </section>
 
     </div>
 
-<<<<<<< HEAD
-    <p class="footer-note">
-      Sprint 1-3 &middot; Sistema de coleta de recomendações &middot; TCC2
-    </p>
-=======
     <!--
       Modal de confirmação de envio (feedback após enviar uma
       recomendação). Fica fora do .card porque cobre a tela inteira.
@@ -462,7 +377,6 @@
         </button>
       </div>
     </div>
->>>>>>> Sprint1
   </main>
 
   <script src="js/app.js"></script>
