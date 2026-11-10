@@ -416,6 +416,38 @@ async function call(method, path, body, token) {
     "resultados do SUS agregam as respostas (2 respostas, média 75)"
   );
 
+  // -------- Relatório público (dados abertos, pedido da Julia) --------
+  // Reaproveita o estado deixado pelas Sprints 2/3 acima: 3 itens
+  // coletados (todos Instagram/Reels), 1 categorizado (A e B concordam
+  // em "Magreza ideal") e 1 "em dúvida" (A e B discordam) — dá pra
+  // conferir tanto a agregação quanto que nada sensível vaza.
+  console.log("Relatório público (dados abertos)");
+
+  const publicReport = await call("GET", "/api/public/report");
+  ok(publicReport.status === 200, "relatório público não exige login");
+  ok(publicReport.data.itemsColetados === 3, "relatório público conta os 3 itens coletados");
+  ok(
+    publicReport.data.itemsCategorizados === 1 && publicReport.data.percentConcordancia === 50,
+    "relatório público reflete 1 item categorizado e 50% de concordância (igual ao /api/agreement)"
+  );
+  ok(
+    publicReport.data.porRede.some((r) => r.label === "Instagram" && r.count === 3),
+    "relatório público agrega por rede social"
+  );
+  ok(
+    publicReport.data.categorias.some((c) => c.label === "Magreza ideal" && c.count === 3),
+    "relatório público agrega categorias (contando as 2 avaliações concordantes + 1 divergente)"
+  );
+
+  const reportText = JSON.stringify(publicReport.data);
+  ok(
+    !reportText.includes("instagram.com/reel") &&
+      !reportText.includes("@example.com") &&
+      !reportText.toLowerCase().includes("participantid") &&
+      !reportText.toLowerCase().includes("\"link\""),
+    "relatório público não vaza link, e-mail ou participantId"
+  );
+
   console.log(`\n${passed} ok, ${failed} falha(s).`);
   if (failed > 0) {
     process.exitCode = 1;

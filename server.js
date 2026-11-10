@@ -810,6 +810,97 @@ app.get("/api/sus", requireAuth, (req, res) => {
   });
 });
 
+/* ===================== Relatório público (dados abertos) ===================== */
+
+/**
+ * Sub-tarefa: "Relatório público agregado (back-end)"
+ * Pedido da Julia: abrir os RESULTADOS da pesquisa (agregados e
+ * anonimizados) pra qualquer pessoa explorar, sem login — mas sem abrir a
+ * categorização em si (isso continua em /api/queue e
+ * /api/recommendations/:id/categorize, atrás de requireAuth, porque a
+ * métrica de concordância depende de saber quem é a avaliadora A e quem é
+ * a B).
+ *
+ * Importante: este endpoint nunca devolve link, code, participantId,
+ * motivo (texto livre) ou qualquer data por item — só contagens
+ * agregadas. Isso é intencional (ver conversa sobre o TCLE prometer uso
+ * "sempre de forma agregada, sem identificação individual", e sobre os
+ * links apontarem pra posts de terceiros que nunca consentiram em entrar
+ * numa base pública).
+ */
+app.get("/api/public/report", (req, res) => {
+  const recommendations = readJSON(RECOMMENDATIONS_FILE);
+  const categorizations = readJSON(CATEGORIZATIONS_FILE);
+
+  const countBy = (list, key) => {
+    const counts = {};
+    for (const item of list) {
+      const value = item[key];
+      counts[value] = (counts[value] || 0) + 1;
+    }
+    return Object.entries(counts)
+      .map(([label, count]) => ({
+        label,
+        count,
+        percent: list.length ? Math.round((count / list.length) * 1000) / 10 : 0,
+      }))
+      .sort((a, b) => b.count - a.count);
+  };
+
+  // Categoria é um array (até 2 por categorização) — achata antes de contar.
+  const categoryCounts = {};
+  for (const c of categorizations) {
+    for (const cat of c.categories || []) {
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    }
+  }
+  const categorias = Object.entries(categoryCounts)
+    .map(([label, count]) => ({
+      label,
+      count,
+      percent: categorizations.length
+        ? Math.round((count / categorizations.length) * 1000) / 10
+        : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  const itemsCategorizados = recommendations.filter((r) => {
+    const itemCategorizations = categorizations.filter((c) => c.recommendationId === r.id);
+    return computeItemStatus(itemCategorizations) === "categorizado";
+  }).length;
+
+  const doubleEvaluated = recommendations.filter((r) => {
+    const itemCategorizations = categorizations.filter((c) => c.recommendationId === r.id);
+    return itemCategorizations.length === 2;
+  }).length;
+  const agreements = recommendations.filter((r) => {
+    const itemCategorizations = categorizations.filter((c) => c.recommendationId === r.id);
+    return (
+      itemCategorizations.length === 2 &&
+      computeItemStatus(itemCategorizations) === "categorizado"
+    );
+  }).length;
+
+  res.json({
+    geradoEm: new Date().toISOString(),
+    itemsColetados: recommendations.length,
+    itemsCategorizados,
+    percentCategorizados: recommendations.length
+      ? Math.round((itemsCategorizados / recommendations.length) * 100)
+      : 0,
+    percentConcordancia: doubleEvaluated
+      ? Math.round((agreements / doubleEvaluated) * 100)
+      : null,
+    porRede: countBy(recommendations, "network"),
+    porFormato: countBy(recommendations, "format"),
+    categorias,
+    totalCategorizacoes: categorizations.length,
+    tom: countBy(categorizations, "tone"),
+    intencaoComercial: countBy(categorizations, "commercialIntent"),
+    edicaoAparente: countBy(categorizations, "apparentEditing"),
+  });
+});
+
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 app.get("/favicon.ico", (req, res) => res.status(204).end());
 

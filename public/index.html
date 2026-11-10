@@ -11,9 +11,7 @@
   <main class="app-shell">
     <div class="card">
 
-      <!-- ===================== TELA 1: Login / Cadastro ===================== -->
-      <!-- User story (Sprint 5, revisado): Sistema de Login da Participante,
-           como etapa própria, separada do aceite do TCLE (ver TELA 2). -->
+      
       <section id="screen-login" class="screen" data-screen="login">
         <div class="brand-mark">
           <div class="brand-badge" aria-hidden="true">
@@ -59,10 +57,9 @@
         </form>
 
         <button type="button" id="btn-show-login" class="btn-back-link btn-toggle-auth">
-          Já tenho conta — entrar
+          Fazer login 
         </button>
 
-        <!-- Login (participante que já tem conta, em outro dispositivo/sessão) -->
         <form id="login-form" hidden>
           <label class="field">
             <span>E-mail</span>
@@ -83,21 +80,10 @@
           Ainda não tenho conta — cadastrar
         </button>
 
-        <!--
-          Pedido da Julia: visível tanto no modo cadastro quanto no modo
-          login (não é alternado por setAuthMode como os dois botões
-          acima) — some só quando a participante já está conectada.
-        -->
         <button type="button" id="btn-forgot-password" class="btn-back-link btn-toggle-auth">
           Esqueci minha senha
         </button>
 
-        <!--
-          Mostrado só quando a participante volta pra essa tela pelo "←
-          Voltar" (a partir da tela de TCLE) depois de já estar logada
-          nesta sessão. Evita que ela tente se cadastrar/logar de novo
-          por engano.
-        -->
         <div id="login-already-done" hidden>
           <p class="hint">Você já está conectada.</p>
           <button id="btn-login-continue" class="btn btn-primary">
@@ -105,25 +91,13 @@
           </button>
         </div>
 
-        <!--
-          Acesso ao painel da pesquisadora (Sprint 3), discreto de
-          propósito: não é um botão primário, pra não competir com o
-          fluxo da participante nem confundir quem está ali pra
-          participar da pesquisa. O painel continua protegido por senha
-          (ver admin.html / ADMIN_PASSWORD) — esse link só evita precisar
-          saber o endereço de cor.
-        -->
         <div class="researcher-access">
           <a href="admin.html">É da equipe de pesquisa? Acesse o painel da pesquisadora</a>
+          <br />
+          <a href="resultados.html">Ver resultados da pesquisa (dados abertos)</a>
         </div>
       </section>
 
-      <!-- ===================== TELA: Esqueci minha senha ===================== -->
-      <!-- Pedido da Julia: tela à parte, fora da numeração principal
-           (1-5), acessada a partir da tela de login. Pede e-mail (pra
-           identificar a conta) + senha nova + confirmação; ao confirmar,
-           mostra um modal de feedback (ver #reset-password-success-modal
-           no fim do arquivo). -->
       <section id="screen-reset-password" class="screen" data-screen="reset-password" hidden>
         <button type="button" class="btn-back-link">← Voltar</button>
         <p class="eyebrow">Esqueci minha senha</p>
@@ -154,27 +128,128 @@
         </form>
       </section>
 
-      <!-- ===================== TELA 2: TCLE ===================== -->
-      <!-- User story (Sprint 5, revisado): o aceite do TCLE é uma etapa
-           própria, depois do login/cadastro — e só aparece de novo se a
-           conta ainda não tiver aceitado (ver tcleAccepted em app.js). -->
+
       <section id="screen-tcle" class="screen" data-screen="tcle" hidden>
         <button type="button" class="btn-back-link">← Voltar</button>
         <p class="eyebrow">2 · Termo de Consentimento</p>
         <h1>Termo de Consentimento Livre e Esclarecido (TCLE)</h1>
 
         <div class="tcle-box" tabindex="0" aria-label="Termo de Consentimento Livre e Esclarecido">
+
+          <h2>Termo de Consentimento Livre e Esclarecido</h2>
           <p>
-            <em>[Texto completo do TCLE aprovado pelo Comitê de Ética deve ser
-            inserido aqui antes da coleta real. Este é um texto de exemplo.]</em>
+            Você está sendo convidada a participar, como voluntária, de
+            uma pesquisa de Trabalho de Conclusão de Curso em Ciência da
+            Computação da Universidade Federal de Ouro Preto (UFOP),
+            desenvolvida por Julia Carlos Gonzaga, sob orientação do
+            Prof. Dr. Reinaldo Silva Fortes e coorientação da Profa. Dra.
+            Aline Norberta de Brito. Antes de decidir se quer participar,
+            leia este termo com atenção; você pode esclarecer dúvidas
+            com a pesquisadora pelo contato indicado abaixo antes de
+            aceitar.
           </p>
+
+          <h2>1. Sobre a pesquisa</h2>
           <p>
-            Ao aceitar, você concorda em participar da coleta enviando
-            recomendações que recebeu em redes sociais. Seu e-mail é usado
-            só para você entrar na plataforma de qualquer dispositivo — as
-            avaliadoras que analisam os conteúdos enviados não têm acesso a
-            ele, só a um código interno. Você pode interromper sua
-            participação a qualquer momento, sem justificativa.
+            Esta pesquisa investiga conteúdos relacionados a corpo,
+            aparência física e alimentação recomendados por algoritmos de
+            redes sociais, como Instagram e TikTok. O objetivo é entender
+            que tipo de conteúdo esse tipo de recomendação costuma
+            entregar a mulheres.
+          </p>
+
+          <h2>2. Quem pode participar</h2>
+          <p>
+            Mulheres maiores de 18 anos, usuárias de redes sociais, que já
+            tenham notado receber recomendações de conteúdo sobre corpo,
+            aparência ou alimentação nessas plataformas.
+          </p>
+
+          <h2>3. O que você vai fazer</h2>
+          <p>Se você concordar em participar, você vai:</p>
+          <ul>
+            <li>
+              Criar uma conta com e-mail e senha, usada só para você
+              acessar a plataforma de qualquer dispositivo;
+            </li>
+            <li>
+              Enviar, quando quiser, até 3 links de publicações que você
+              identificou como recomendadas a você e relacionadas a
+              corpo, aparência ou alimentação;
+            </li>
+            <li>
+              Para cada envio, informar a rede, o formato do conteúdo,
+              quando ele apareceu pra você e por que você suspeita que
+              foi uma recomendação algorítmica.
+            </li>
+          </ul>
+          <p>
+            Isso leva poucos minutos por envio e pode ser feito no seu
+            próprio ritmo, pelo próprio site.
+          </p>
+
+          <h2>4. Riscos e desconfortos</h2>
+          <p>
+            A participação tem risco mínimo. Como o tema envolve corpo e
+            aparência, é possível sentir algum desconforto ao revisitar
+            esse tipo de conteúdo. Você pode parar de participar a
+            qualquer momento, sem precisar justificar e sem nenhum
+            prejuízo.
+          </p>
+
+          <h2>5. Benefícios</h2>
+          <p>
+            Não há benefício direto e imediato a você. Sua participação
+            contribui para a produção de conhecimento sobre como
+            algoritmos de recomendação lidam com conteúdos sobre corpo
+            direcionados a mulheres.
+          </p>
+
+          <h2>6. Confidencialidade</h2>
+          <p>
+            Seu e-mail é usado só para você acessar a plataforma e
+            recuperar sua senha, se precisar. Ele nunca é mostrado às
+            pesquisadoras que analisam os conteúdos enviados: cada
+            participante é identificada apenas por um código interno
+            (ex.: "P427"), sem vínculo visível com seu e-mail durante a
+            análise. Os resultados desta pesquisa podem ser usados em
+            trabalhos acadêmicos (monografia, artigos, apresentações) e
+            também ficam disponíveis publicamente, sem necessidade de
+            login, num relatório aberto com números agregados (por
+            exemplo: quantos conteúdos de cada categoria foram
+            coletados) — sempre de forma agregada, sem qualquer
+            identificação individual das participantes, sem o link dos
+            conteúdos enviados e sem qualquer outro dado individual por
+            envio.
+          </p>
+
+          <h2>7. Participação voluntária</h2>
+          <p>
+            Participar é voluntário. Você pode se recusar ou desistir a
+            qualquer momento, sem precisar justificar e sem qualquer
+            prejuízo — basta parar de enviar conteúdos. Se quiser que
+            dados já enviados sejam removidos, pode pedir isso
+            diretamente à pesquisadora pelo contato abaixo.
+          </p>
+
+          <h2>8. Dúvidas e contato</h2>
+          <p>
+            Pesquisadora responsável: Julia Carlos Gonzaga —
+            [e-mail de contato da pesquisa]<br />
+            Orientador: Prof. Dr. Reinaldo Silva Fortes —
+            [e-mail institucional]<br />
+            Em caso de dúvidas sobre seus direitos como participante de
+            pesquisa, você pode contatar o Comitê de Ética em Pesquisa
+            (CEP) da UFOP: [contato do CEP-UFOP] [nº do
+            parecer/CAAE, quando houver].
+          </p>
+
+          <p>
+            Ao marcar "Li e concordo em participar" abaixo, você declara
+            que leu e entendeu este termo, teve a chance de esclarecer
+            dúvidas, tem 18 anos ou mais, e participa de forma livre e
+            voluntária, sabendo que pode desistir a qualquer momento sem
+            prejuízo.
           </p>
         </div>
 
@@ -191,11 +266,6 @@
           <p class="error-msg" id="tcle-error" hidden></p>
         </form>
 
-        <!--
-          Segurança: se a participante voltar pra essa tela (pelo "←
-          Voltar") já tendo aceitado o TCLE nesta conta, mostra um aviso
-          em vez do formulário de novo.
-        -->
         <div id="tcle-already-done" hidden>
           <p class="hint">Você já aceitou o TCLE.</p>
           <button id="btn-tcle-continue" class="btn btn-primary">
@@ -204,8 +274,7 @@
         </div>
       </section>
 
-      <!-- ===================== TELA 3: Instruções de coleta ===================== -->
-      <!-- User story: Tela de Instruções de Coleta (sem back-end) -->
+      
       <section id="screen-instructions" class="screen" data-screen="instructions" hidden>
         <button type="button" class="btn-back-link">← Voltar</button>
         <p class="eyebrow">3 · Instruções de coleta</p>
@@ -232,8 +301,6 @@
         </button>
       </section>
 
-      <!-- ===================== TELA 3: Envio de recomendação ===================== -->
-      <!-- User story: Sistema de Envio de Recomendação -->
       <section id="screen-submit" class="screen" data-screen="submit" hidden>
         <button type="button" class="btn-back-link">← Voltar</button>
         <p class="eyebrow">4 · Enviar recomendação</p>
@@ -317,8 +384,6 @@
         </button>
       </section>
 
-      <!-- ===================== TELA 4: Status dos envios ===================== -->
-      <!-- User story: Sistema de Status dos Envios -->
       <section id="screen-status" class="screen" data-screen="status" hidden>
         <button type="button" class="btn-back-link">← Voltar</button>
         <p class="eyebrow">5 · Seus envios</p>
@@ -341,10 +406,6 @@
 
     </div>
 
-    <!--
-      Modal de confirmação de envio (feedback após enviar uma
-      recomendação). Fica fora do .card porque cobre a tela inteira.
-    -->
     <div id="submit-success-modal" class="modal-overlay" hidden>
       <div class="modal-box" role="alertdialog" aria-labelledby="submit-success-title">
         <button type="button" class="modal-close" id="btn-modal-close" aria-label="Fechar">×</button>
@@ -360,13 +421,6 @@
       </div>
     </div>
 
-    <!--
-      Modal de confirmação de redefinição de senha (pedido da Julia).
-      Reaproveita a classe .modal-overlay (já tem a regra
-      .modal-overlay[hidden] { display: none } no CSS, então não corre o
-      risco do bug de cascata que já pegamos antes com elementos
-      escondidos por [hidden]).
-    -->
     <div id="reset-password-success-modal" class="modal-overlay" hidden>
       <div class="modal-box" role="alertdialog" aria-labelledby="reset-password-success-title">
         <div class="modal-icon" aria-hidden="true">✓</div>

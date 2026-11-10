@@ -35,6 +35,12 @@ A participante se identifica por e-mail e senha (ver [Limitações conhecidas](#
 - Indicadores de concordância entre avaliadoras (itens coletados, % categorizados, % de concordância, tempo médio por item, lista de itens divergentes).
 - Resultados do questionário SUS: pontuação média, classificação, contribuição por afirmação e respostas individuais.
 
+**Relatório público — dados abertos (`/resultados.html`)**
+- Decisão da Julia: a categorização em si continua atrás de login (a métrica de concordância depende de saber quem é a avaliadora A e quem é a B), mas os **resultados agregados** ficam abertos, sem login, pra qualquer pessoa explorar — alinhado com princípios de ciência aberta, e citado no TCLE como uso "sempre de forma agregada, sem identificação individual".
+- Mostra: itens coletados, % categorizados, % de concordância entre avaliadoras, e a distribuição por rede social, formato, categoria (taxonomia da Monografia I), tom, intenção comercial e edição aparente.
+- Nunca expõe link, código interno, participantId, data por item ou o motivo (texto livre) de nenhum envio — só contagens agregadas (`GET /api/public/report`). Isso é intencional: além de proteger a participante, o link enviado aponta pro post de **outra pessoa**, que nunca consentiu em entrar numa base pública (ver limitação "Mudança de protocolo" abaixo).
+- Acessível a partir de um link na tela de login da participante ("Ver resultados da pesquisa (dados abertos)").
+
 **Testes (Sprint 4)**
 - Questionário System Usability Scale (SUS) digital (`/sus.html`), aplicado às usuárias após a execução de tarefas representativas do protocolo de coleta — ver [`docs/guia-teste-usabilidade.md`](docs/guia-teste-usabilidade.md).
 - Testes funcionais automatizados cobrindo os critérios de aceitação de cada User Story das Sprints 1 a 5 (`tests/test-acceptance.js`).
@@ -61,6 +67,7 @@ npm start
 - Participante: `http://localhost:3000`
 - Painel da pesquisadora: `http://localhost:3000/admin.html` (senha definida pela variável de ambiente `ADMIN_PASSWORD`; padrão de desenvolvimento: `pesquisa123`)
 - Questionário SUS (teste de usabilidade): `http://localhost:3000/sus.html`
+- Resultados públicos (dados abertos, sem login): `http://localhost:3000/resultados.html`
 
 ## Como testar
 
@@ -74,7 +81,7 @@ npm test                          # em outro terminal
 
 1. `test-flow.js` — fluxo da participante de ponta a ponta (cadastro, TCLE, envio, status, logout, login, esqueci minha senha);
 2. `test-admin-flow.js` — fluxo do painel da pesquisadora de ponta a ponta, incluindo "esqueci minha senha" (a senha original é restaurada no final do teste);
-3. `test-acceptance.js` — testes funcionais dos critérios de aceitação de todas as User Stories (Sprints 1-5), direto na API;
+3. `test-acceptance.js` — testes funcionais dos critérios de aceitação de todas as User Stories (Sprints 1-5), direto na API, incluindo o relatório público (`/api/public/report`): agregação correta e, principalmente, que nenhum link/e-mail/participantId vaza;
 4. `test-sus-flow.js` — fluxo do questionário SUS de ponta a ponta, conferindo a pontuação no painel;
 5. `test-back-navigation.js` — botão "← Voltar" em todas as telas da participante, incluindo a regra de não tentar criar outra conta ao voltar para o login, nem aceitar o TCLE de novo ao voltar pra essa tela, já tendo feito isso antes.
 
@@ -86,10 +93,12 @@ public/
   index.html          telas da participante
   admin.html           painel da pesquisadora
   sus.html             questionário SUS (teste de usabilidade)
+  resultados.html       relatório público, dados abertos (sem login)
   css/style.css
   js/app.js            lógica da participante
   js/admin.js          lógica do painel da pesquisadora
   js/sus.js            lógica do questionário SUS
+  js/resultados.js      lógica do relatório público
 tests/
   test-flow.js          teste de ponta a ponta — participante
   test-admin-flow.js    teste de ponta a ponta — painel da pesquisadora
@@ -127,6 +136,7 @@ A Sprint 4 preparou o **instrumento** (questionário SUS digital) e o **roteiro*
 - **Mudança de protocolo (print → link)**: o protocolo original (Monografia I) previa envio de print anonimizado pela participante, ocultando terceiros antes de enviar. Para reduzir fricção, a coleta passou a ser por link do post/Reels, o que remove essa etapa de anonimização — quem acessa o link vê o conteúdo original, incluindo perfil e comentários de terceiros. Antes de submissão ao Comitê de Ética (Plataforma Brasil) ou coleta real, isso precisa ser refletido no texto do protocolo (TCLE, objetivos, resumo) e decidido como tratar a exposição de terceiros.
 - **Stack trocada (Flutter → HTML/CSS/JS)**: a tecnologia de implementação foi trocada para viabilizar o desenvolvimento dentro do prazo. A Seção 3.5.2 da metodologia, já entregue, ainda cita Flutter e precisa ser atualizada.
 - **Login da pesquisadora simplificado**: usa senha única compartilhada entre as avaliadoras + escolha manual de "sou a avaliadora A ou B" a cada sessão, em vez de contas individuais de verdade. Suficiente para segregar categorizações e calcular concordância, mas não é autenticação real.
+- **Relatório público sem limite de acesso**: `/api/public/report` e `/resultados.html` não exigem login de propósito (dados abertos), mas também não têm nenhum limite de requisições — antes de divulgar o link publicamente em escala, vale considerar algum rate limiting básico, só por robustez (não é um risco de privacidade, já que o endpoint não devolve nada identificável).
 - **"Esqueci minha senha" do painel sem exigir a senha atual (decisão da Julia)**: como a senha do painel é única e compartilhada (não uma conta por avaliadora), redefini-la sem pedir a senha atual significa que qualquer pessoa que encontre o endereço do painel consegue trocar essa senha sem provar que já a conhecia — diferente do "esqueci minha senha" da participante, que exige saber o e-mail de uma conta que já existe. Mantido assim por decisão explícita, para ficar igual ao fluxo da participante; se o painel for exposto fora de uma rede controlada antes de uma coleta real, vale revisitar (por exemplo, exigindo a senha atual também).
 - **Troca de senha do painel não sobrevive a um reinício do servidor**: igual às sessões de login (ver item acima), a senha trocada pelo "esqueci minha senha" do painel vive só em memória. Reiniciar o servidor volta a usar o valor de `ADMIN_PASSWORD` (ou o padrão de desenvolvimento).
 - **Sessões de login em memória**: tanto o login da participante quanto o da pesquisadora guardam os tokens válidos só em memória no servidor (não em banco). Reiniciar o servidor invalida as sessões abertas — a pessoa precisa entrar de novo (mas a conta e os dados continuam lá). Suficiente para o MVP; antes de uma coleta real, vale revisar junto com a troca do armazenamento em JSON.

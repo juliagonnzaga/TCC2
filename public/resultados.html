@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Resultados da pesquisa</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <main class="app-shell">
+    <div class="card card-wide">
+      <section id="screen-public-report">
+        <p class="eyebrow">Dados abertos</p>
+        <h1>Resultados da pesquisa</h1>
+        <p class="lead">
+          Conteúdos sobre corpo recomendados algoritmicamente em redes
+          sociais, coletados e categorizados como parte de um Trabalho de
+          Conclusão de Curso em Ciência da Computação (UFOP). Os números
+          abaixo são agregados e anônimos — nenhum link, participante ou
+          item individual é exibido aqui.
+        </p>
+
+        <div id="report-loading" class="hint">Carregando dados…</div>
+        <div id="report-error" class="error-msg" hidden></div>
+
+        <div id="report-content" hidden>
+          <div class="report-stats">
+            <div class="report-stat">
+              <div class="stat-value" id="stat-items-coletados">—</div>
+              <div class="stat-label">itens coletados</div>
+            </div>
+            <div class="report-stat">
+              <div class="stat-value" id="stat-items-categorizados">—</div>
+              <div class="stat-label">já categorizados</div>
+            </div>
+            <div class="report-stat">
+              <div class="stat-value" id="stat-percent-concordancia">—</div>
+              <div class="stat-label">concordância entre avaliadoras</div>
+            </div>
+          </div>
+
+          <div class="report-section">
+            <h2>Rede social</h2>
+            <div id="bars-rede"></div>
+          </div>
+
+          <div class="report-section">
+            <h2>Formato do conteúdo</h2>
+            <div id="bars-formato"></div>
+          </div>
+
+          <div class="report-section">
+            <h2>Categorias (taxonomia da Monografia I)</h2>
+            <p class="hint" id="categorias-hint"></p>
+            <div id="bars-categorias"></div>
+          </div>
+
+          <div class="report-section">
+            <h2>Tom predominante</h2>
+            <div id="bars-tom"></div>
+          </div>
+
+          <div class="report-section">
+            <h2>Indício de intenção comercial</h2>
+            <div id="bars-intencao"></div>
+          </div>
+
+          <div class="report-section">
+            <h2>Indício de edição aparente</h2>
+            <div id="bars-edicao"></div>
+          </div>
+
+          <p class="report-footer-note" id="report-footer-note"></p>
+        </div>
+
+        <p class="hint">
+          <a href="index.html">← Voltar para o início</a>
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/resultados.js"></script>
+</body>
+</html>
