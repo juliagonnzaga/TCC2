@@ -9,6 +9,7 @@
 <body class="admin-body">
 
   <!-- ===================== Login ===================== -->
+  <!-- User story: Sistema de Login da Pesquisadora -->
   <main id="admin-screen-login" class="app-shell">
     <div class="card">
       <p class="eyebrow">Painel da pesquisadora</p>
@@ -22,6 +23,13 @@
         <p class="error-msg" id="login-error" hidden></p>
       </form>
 
+      <!--
+        "Esqueci minha senha" (pedido da Julia), mesmo padrão do app da
+        participante: só pede a senha nova + confirmação, sem pedir a
+        senha atual (ver nota de segurança em server.js, POST
+        /api/auth/forgot-password — é uma senha única compartilhada
+        entre as avaliadoras, não contas individuais).
+      -->
       <button type="button" id="btn-admin-forgot-password" class="btn-back-link btn-toggle-auth">
         Esqueci minha senha
       </button>
@@ -90,6 +98,7 @@
     </header>
 
     <!-- ===================== Fila de submissões ===================== -->
+    <!-- User story: Sistema de Fila de Submissões -->
     <section id="admin-view-queue" class="admin-view">
       <div class="admin-view-header">
         <h1>Fila de submissões</h1>
@@ -102,8 +111,7 @@
         <thead>
           <tr>
             <th>Participante</th>
-            <th>Rede · Formato</th>
-            <th>Data</th>
+            <th>Rede social</th>
             <th>Status</th>
             <th></th>
           </tr>
@@ -114,14 +122,14 @@
     </section>
 
     <!-- ===================== Categorização ===================== -->
+    <!-- User story: Sistema de Categorização de Conteúdos -->
     <section id="admin-view-categorize" class="admin-view" hidden>
       <button class="btn-link" id="btn-back-to-queue">&larr; Voltar para a fila</button>
 
       <div class="categorize-grid">
         <div class="categorize-item-info">
           <h2>Item <span id="cat-code"></span></h2>
-          <p><strong>Rede/Formato:</strong> <span id="cat-network-format"></span></p>
-          <p><strong>Data em que apareceu:</strong> <span id="cat-date"></span></p>
+          <p><strong>Rede social:</strong> <span id="cat-network"></span></p>
           <p>
             <strong>Link:</strong>
             <a id="cat-link" href="#" target="_blank" rel="noopener noreferrer"></a>
@@ -193,6 +201,7 @@
     </section>
 
     <!-- ===================== Indicadores / Concordância ===================== -->
+    <!-- User story: Indicador Simples de Concordância -->
     <section id="admin-view-indicators" class="admin-view" hidden>
       <h1>Indicadores</h1>
       <div class="stats-row">
@@ -222,6 +231,7 @@
     </section>
 
     <!-- ===================== Usabilidade (SUS) ===================== -->
+    <!-- User story (Sprint 4): Questionário System Usability Scale -->
     <section id="admin-view-usability" class="admin-view" hidden>
       <h1>Usabilidade (SUS)</h1>
       <p class="lead">
@@ -284,6 +294,12 @@
     </section>
   </div>
 
+  <!--
+    Modal de confirmação de redefinição de senha (pedido da Julia).
+    Reaproveita .modal-overlay, que já tem a regra .modal-overlay[hidden]
+    { display: none } no CSS — sem risco do bug de cascata que já
+    pegamos antes com elementos escondidos por [hidden].
+  -->
   <div id="admin-reset-password-success-modal" class="modal-overlay" hidden>
     <div class="modal-box" role="alertdialog" aria-labelledby="admin-reset-success-title">
       <div class="modal-icon" aria-hidden="true">✓</div>

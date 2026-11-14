@@ -201,10 +201,10 @@ function renderQueue() {
 
   items.forEach((item) => {
     const tr = document.createElement("tr");
+    const networkLabel = item.network === "Outra" && item.networkOther ? item.networkOther : item.network;
     tr.innerHTML = `
       <td>${item.code}</td>
-      <td>${item.network} &middot; ${item.format}</td>
-      <td>${item.appearedAt}</td>
+      <td>${networkLabel}</td>
       <td><span class="status-badge status-${item.status.replace(/\s/g, "-")}">${item.status}</span></td>
       <td><button class="btn-link" data-open="${item.id}">Categorizar</button></td>
     `;
@@ -261,8 +261,8 @@ function openCategorize(id) {
   adminState.currentItemId = id;
 
   document.getElementById("cat-code").textContent = item.code;
-  document.getElementById("cat-network-format").textContent = `${item.network} · ${item.format}`;
-  document.getElementById("cat-date").textContent = item.appearedAt;
+  document.getElementById("cat-network").textContent =
+    item.network === "Outra" && item.networkOther ? item.networkOther : item.network;
   const linkEl = document.getElementById("cat-link");
   linkEl.href = item.link;
   linkEl.textContent = item.link;

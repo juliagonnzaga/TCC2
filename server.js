@@ -128,7 +128,8 @@ function generateAnonymousCode(existingCodes) {
   return code;
 }
 
-const VALID_NETWORKS = ["Instagram", "TikTok", "Outra"];
+// Pedido da Julia: ampliar a lista de redes (antes só Instagram/TikTok/Outra).
+const VALID_NETWORKS = ["Instagram", "TikTok", "Facebook", "YouTube", "X", "Outra"];
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 6;
@@ -311,8 +312,40 @@ app.post("/api/participants/accept-tcle", requireParticipantAuth, (req, res) => 
 
 /* ===================== Sprint 2: Coleta de recomendações ===================== */
 
-const VALID_FORMATS = ["Reels", "Feed", "Explorar", "Outro"];
 const MAX_RECOMMENDATIONS_PER_PARTICIPANT = 3;
+
+/**
+ * Pedido da Julia: ampliar a lista de redes (antes só Instagram/TikTok/
+ * Outra) e dois campos novos preenchidos pela PARTICIPANTE — importante:
+ * isso é a percepção dela, separado e sem competir com a categorização
+ * da pesquisadora (taxonomia da Monografia I, ver TAXONOMY mais abaixo).
+ * Dá pra comparar os dois depois (percepção da participante x
+ * categorização treinada), mas nunca substituir um pelo outro.
+ */
+const PARTICIPANT_SUBJECTS = [
+  "Corpo e aparência",
+  "Autoestima e bem-estar",
+  "Saúde, alimentação e emagrecimento",
+  "Mulheres e questões femininas",
+  "Beleza, moda e estética",
+  "Outro",
+  "Não sei identificar",
+];
+const MAX_PARTICIPANT_SUBJECTS = 2;
+
+const VALID_FEELINGS = [
+  "Identificada",
+  "Motivada",
+  "Inspirada",
+  "Informada",
+  "Indiferente",
+  "Incomodada",
+  "Pressionada",
+  "Comparada",
+  "Insatisfeita com minha aparência",
+  "Positiva em relação ao meu corpo",
+  "Outra",
+];
 
 function isValidUrl(value) {
   try {
@@ -333,11 +366,14 @@ function isValidUrl(value) {
  * elegíveis").
  */
 app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
-  const { link, network, format, appearedAt, reason } = req.body || {};
+  // Pedido da Julia: "formato" e "data em que apareceu" saíram do
+  // formulário (e, com eles, dessa validação — ver histórico do arquivo
+  // se precisar recuperar como eram).
+  const { link, network, networkOther, reason, perceivedSubjects, feelings } = req.body || {};
 
-  if (!link || !network || !format || !appearedAt || !reason) {
+  if (!link || !network || !reason) {
     return res.status(400).json({
-      error: "link, network, format, appearedAt e reason são obrigatórios.",
+      error: "link, network e reason são obrigatórios.",
     });
   }
   if (!isValidUrl(link)) {
@@ -348,23 +384,32 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
   if (!VALID_NETWORKS.includes(network)) {
     return res.status(400).json({ error: "Rede social inválida." });
   }
-  if (!VALID_FORMATS.includes(format)) {
-    return res.status(400).json({ error: "Formato inválido." });
+  if (network === "Outra" && !String(networkOther || "").trim()) {
+    return res.status(400).json({ error: "Diga qual é a rede social, já que escolheu \"Outra\"." });
   }
   if (String(reason).trim().length < 3) {
     return res
       .status(400)
       .json({ error: "Conte, em poucas palavras, por que acha que isso foi recomendado." });
   }
-  // Defeito encontrado na Sprint 4 (teste funcional do critério de
-  // aceitação "data em que apareceu"): nada impedia enviar uma data no
-  // futuro. Permite até o dia seguinte, de folga para fuso horário.
-  const appearedAtDate = new Date(appearedAt);
-  const oneDayAhead = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  if (isNaN(appearedAtDate) || appearedAtDate > oneDayAhead) {
+  // Percepção da PARTICIPANTE sobre o assunto do conteúdo — separada da
+  // categorização da pesquisadora (ver comentário em PARTICIPANT_SUBJECTS).
+  if (
+    !Array.isArray(perceivedSubjects) ||
+    perceivedSubjects.length === 0 ||
+    perceivedSubjects.length > MAX_PARTICIPANT_SUBJECTS
+  ) {
     return res
       .status(400)
-      .json({ error: "Informe uma data válida, que não seja no futuro." });
+      .json({ error: `Escolha de 1 a ${MAX_PARTICIPANT_SUBJECTS} assuntos.` });
+  }
+  if (!perceivedSubjects.every((s) => PARTICIPANT_SUBJECTS.includes(s))) {
+    return res.status(400).json({ error: "Assunto inválido." });
+  }
+  // "Como você se sentiu" é opcional — feelings pode vir vazio/ausente.
+  const feelingsList = Array.isArray(feelings) ? feelings : [];
+  if (!feelingsList.every((f) => VALID_FEELINGS.includes(f))) {
+    return res.status(400).json({ error: "Sentimento inválido." });
   }
 
   const participants = readJSON(PARTICIPANTS_FILE);
@@ -397,9 +442,10 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
     code: participant.code,
     link,
     network,
-    format,
-    appearedAt,
+    networkOther: network === "Outra" ? String(networkOther).trim() : undefined,
     reason,
+    perceivedSubjects,
+    feelings: feelingsList,
     status: "recebido",
     submittedAt: new Date().toISOString(),
   };
@@ -847,22 +893,29 @@ app.get("/api/public/report", (req, res) => {
       .sort((a, b) => b.count - a.count);
   };
 
-  // Categoria é um array (até 2 por categorização) — achata antes de contar.
-  const categoryCounts = {};
-  for (const c of categorizations) {
-    for (const cat of c.categories || []) {
-      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+  // Alguns campos são arrays (até 2 categorias por categorização, até 2
+  // assuntos percebidos, N sentimentos) — achata antes de contar.
+  const countArrayField = (list, key, totalForPercent) => {
+    const counts = {};
+    for (const item of list) {
+      for (const value of item[key] || []) {
+        counts[value] = (counts[value] || 0) + 1;
+      }
     }
-  }
-  const categorias = Object.entries(categoryCounts)
-    .map(([label, count]) => ({
-      label,
-      count,
-      percent: categorizations.length
-        ? Math.round((count / categorizations.length) * 1000) / 10
-        : 0,
-    }))
-    .sort((a, b) => b.count - a.count);
+    return Object.entries(counts)
+      .map(([label, count]) => ({
+        label,
+        count,
+        percent: totalForPercent ? Math.round((count / totalForPercent) * 1000) / 10 : 0,
+      }))
+      .sort((a, b) => b.count - a.count);
+  };
+
+  const categorias = countArrayField(categorizations, "categories", categorizations.length);
+  // Percepção da participante (ver PARTICIPANT_SUBJECTS/VALID_FEELINGS):
+  // vem do próprio envio, não da categorização da pesquisadora.
+  const assuntoPercebido = countArrayField(recommendations, "perceivedSubjects", recommendations.length);
+  const comoSeSentiu = countArrayField(recommendations, "feelings", recommendations.length);
 
   const itemsCategorizados = recommendations.filter((r) => {
     const itemCategorizations = categorizations.filter((c) => c.recommendationId === r.id);
@@ -892,12 +945,13 @@ app.get("/api/public/report", (req, res) => {
       ? Math.round((agreements / doubleEvaluated) * 100)
       : null,
     porRede: countBy(recommendations, "network"),
-    porFormato: countBy(recommendations, "format"),
     categorias,
     totalCategorizacoes: categorizations.length,
     tom: countBy(categorizations, "tone"),
     intencaoComercial: countBy(categorizations, "commercialIntent"),
     edicaoAparente: countBy(categorizations, "apparentEditing"),
+    assuntoPercebido,
+    comoSeSentiu,
   });
 });
 

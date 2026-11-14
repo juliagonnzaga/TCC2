@@ -55,9 +55,11 @@ async function loadReport() {
       data.percentConcordancia === null ? "—" : `${data.percentConcordancia}%`;
 
     renderBars("bars-rede", data.porRede, { emptyMessage: "Ainda não há envios." });
-    renderBars("bars-formato", data.porFormato, { emptyMessage: "Ainda não há envios." });
     renderBars("bars-categorias", data.categorias, {
       emptyMessage: "Ainda não há categorizações registradas.",
+    });
+    renderBars("bars-assunto", data.assuntoPercebido, {
+      emptyMessage: "Ainda não há envios com assunto percebido.",
     });
     renderBars("bars-tom", data.tom, { emptyMessage: "Ainda não há categorizações registradas." });
     renderBars("bars-intencao", data.intencaoComercial, {
@@ -65,6 +67,9 @@ async function loadReport() {
     });
     renderBars("bars-edicao", data.edicaoAparente, {
       emptyMessage: "Ainda não há categorizações registradas.",
+    });
+    renderBars("bars-sentimento", data.comoSeSentiu, {
+      emptyMessage: "Ainda não há respostas (campo opcional).",
     });
 
     const categoriasHint = document.getElementById("categorias-hint");

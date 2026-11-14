@@ -54,8 +54,11 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
 
   await page.fill("#rec-link", "https://www.instagram.com/reel/teste123");
   await page.click('label.chip:has(input[name="rec-network"][value="Instagram"])');
-  await page.click('label.chip:has(input[name="rec-format"][value="Reels"])');
-  await page.fill("#rec-date", "2026-09-29");
+  // Campos novos (pedido da Julia): assunto percebido (obrigatório, até 2)
+  // e como se sentiu (opcional — deixado em branco aqui de propósito, pra
+  // conferir que o envio funciona sem ele). "Formato" e "Data em que
+  // apareceu" saíram do formulário (pedido da Julia).
+  await page.click('label.chip:has(input[name="rec-subject"][value="Saúde, alimentação e emagrecimento"])');
   await page.fill("#rec-reason", "Aparece muito conteúdo sobre dieta");
   await page.screenshot({ path: "shot-4-submit.png" });
   await page.click('#submit-form button[type=submit]');

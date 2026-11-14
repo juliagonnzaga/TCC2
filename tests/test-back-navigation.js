@@ -105,8 +105,7 @@ async function runFlow(browser) {
   await page.waitForSelector("#screen-submit:not([hidden])");
   await page.fill("#rec-link", "https://www.instagram.com/reel/teste-voltar");
   await page.click('label.chip:has(input[name="rec-network"][value="Instagram"])');
-  await page.click('label.chip:has(input[name="rec-format"][value="Reels"])');
-  await page.fill("#rec-date", "2026-10-10");
+  await page.click('label.chip:has(input[name="rec-subject"][value="Corpo e aparência"])');
   await page.fill("#rec-reason", "teste do botão voltar");
   await page.click("#submit-form button[type=submit]");
   // Com o modal de confirmação de envio, vai pro status pelo botão do modal.

@@ -8,6 +8,14 @@
 </head>
 <body>
 
+  <!--
+    Relatório público, sem login (pedido da Julia): mostra só dados
+    agregados e anonimizados (ver comentário em /api/public/report no
+    server.js sobre por que nenhum link, código ou data individual
+    aparece aqui). A categorização em si continua atrás de login em
+    admin.html, porque a métrica de concordância entre avaliadoras A/B
+    depende de saber quem categorizou o quê.
+  -->
   <main class="app-shell">
     <div class="card card-wide">
       <section id="screen-public-report">
@@ -46,14 +54,19 @@
           </div>
 
           <div class="report-section">
-            <h2>Formato do conteúdo</h2>
-            <div id="bars-formato"></div>
-          </div>
-
-          <div class="report-section">
-            <h2>Categorias (taxonomia da Monografia I)</h2>
+            <h2>Categorias (taxonomia da Monografia I, atribuída pela pesquisadora)</h2>
             <p class="hint" id="categorias-hint"></p>
             <div id="bars-categorias"></div>
+          </div>
+
+          <!--
+            Pedido da Julia: percepção DA PARTICIPANTE sobre o conteúdo,
+            separada da categorização da pesquisadora acima — dá pra
+            comparar as duas sem misturar as fontes.
+          -->
+          <div class="report-section">
+            <h2>Assunto percebido pelas participantes</h2>
+            <div id="bars-assunto"></div>
           </div>
 
           <div class="report-section">
@@ -69,6 +82,11 @@
           <div class="report-section">
             <h2>Indício de edição aparente</h2>
             <div id="bars-edicao"></div>
+          </div>
+
+          <div class="report-section">
+            <h2>Como as participantes se sentiram (opcional, pode ficar em branco)</h2>
+            <div id="bars-sentimento"></div>
           </div>
 
           <p class="report-footer-note" id="report-footer-note"></p>

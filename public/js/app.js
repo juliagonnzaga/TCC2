@@ -354,18 +354,85 @@ function handleExpiredSession() {
 const submitForm = document.getElementById("submit-form");
 const submitProgress = document.getElementById("submit-progress");
 
+/* ---------- Rede social "Outra": mostra/esconde o campo de texto ---------- */
+
+const networkOtherField = document.getElementById("rec-network-other-field");
+const networkOtherInput = document.getElementById("rec-network-other");
+const networkOtherConfirmed = document.getElementById("rec-network-other-confirmed");
+const btnConfirmNetworkOther = document.getElementById("btn-confirm-network-other");
+
+submitForm.addEventListener("change", (event) => {
+  if (event.target.name === "rec-network") {
+    const isOther = event.target.value === "Outra";
+    networkOtherField.hidden = !isOther;
+    networkOtherConfirmed.hidden = true;
+    if (!isOther) networkOtherInput.value = "";
+  }
+  if (event.target.name === "rec-subject") enforceMaxTwoSubjects();
+});
+
+networkOtherInput.addEventListener("input", () => {
+  networkOtherConfirmed.hidden = true;
+});
+
+// Pedido da Julia: botão ao lado do campo pra confirmar o nome digitado
+// da rede social. É só uma confirmação visual — o valor enviado no envio
+// final vem sempre do campo em si, mesmo que a participante não clique
+// aqui antes de enviar.
+btnConfirmNetworkOther.addEventListener("click", () => {
+  const value = networkOtherInput.value.trim();
+  if (!value) {
+    showError("submit-error", "Digite o nome da rede social antes de confirmar.");
+    return;
+  }
+  hideError("submit-error");
+  networkOtherConfirmed.textContent = `Rede social definida: ${value}`;
+  networkOtherConfirmed.hidden = false;
+});
+
+/* ---------- Assunto percebido: máximo 2, mesmo padrão do painel da pesquisadora ---------- */
+
+function enforceMaxTwoSubjects() {
+  const checked = submitForm.querySelectorAll('input[name="rec-subject"]:checked');
+  const all = submitForm.querySelectorAll('input[name="rec-subject"]');
+  const hint = document.getElementById("rec-subject-hint");
+
+  if (checked.length >= 2) {
+    all.forEach((c) => {
+      if (!c.checked) c.disabled = true;
+    });
+    hint.textContent = "Máximo de 2 assuntos atingido.";
+  } else {
+    all.forEach((c) => (c.disabled = false));
+    hint.textContent = "Escolha até 2 opções.";
+  }
+}
+
 submitForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   hideError("submit-error");
 
   const link = document.getElementById("rec-link").value.trim();
   const networkInput = submitForm.querySelector('input[name="rec-network"]:checked');
-  const formatInput = submitForm.querySelector('input[name="rec-format"]:checked');
-  const appearedAt = document.getElementById("rec-date").value;
+  const networkOther = networkOtherInput.value.trim();
+  const perceivedSubjects = Array.from(
+    submitForm.querySelectorAll('input[name="rec-subject"]:checked')
+  ).map((el) => el.value);
   const reason = document.getElementById("rec-reason").value.trim();
+  const feelings = Array.from(
+    submitForm.querySelectorAll('input[name="rec-feeling"]:checked')
+  ).map((el) => el.value);
 
-  if (!link || !networkInput || !formatInput || !appearedAt || !reason) {
+  if (!link || !networkInput || !reason) {
     showError("submit-error", "Preencha todos os campos antes de enviar.");
+    return;
+  }
+  if (networkInput.value === "Outra" && !networkOther) {
+    showError("submit-error", "Diga qual é a rede social, já que escolheu \"Outra\".");
+    return;
+  }
+  if (perceivedSubjects.length === 0) {
+    showError("submit-error", "Escolha pelo menos 1 assunto percebido no conteúdo.");
     return;
   }
   if (!state.token) {
@@ -384,9 +451,10 @@ submitForm.addEventListener("submit", async (event) => {
       body: JSON.stringify({
         link,
         network: networkInput.value,
-        format: formatInput.value,
-        appearedAt,
+        networkOther: networkInput.value === "Outra" ? networkOther : undefined,
+        perceivedSubjects,
         reason,
+        feelings,
       }),
     });
 
@@ -399,6 +467,9 @@ submitForm.addEventListener("submit", async (event) => {
     if (!res.ok) throw new Error(data.error || "Falha ao enviar a recomendação.");
 
     submitForm.reset();
+    networkOtherField.hidden = true;
+    networkOtherConfirmed.hidden = true;
+    enforceMaxTwoSubjects();
     submitProgress.textContent = "Cole o link do post ou Reels que apareceu para você.";
     showSubmitSuccessModal(data.remaining, data.totalForParticipant);
   } catch (err) {
@@ -472,13 +543,13 @@ async function refreshStatus() {
     data.items.forEach((item) => {
       const li = document.createElement("li");
       li.className = "rec-item";
+      const networkLabel = item.network === "Outra" && item.networkOther ? item.networkOther : item.network;
       li.innerHTML = `
         <div class="rec-item-top">
-          <span class="rec-badge">${item.network} &middot; ${item.format}</span>
+          <span class="rec-badge">${networkLabel}</span>
           <span class="rec-status">${item.status}</span>
         </div>
         <a class="rec-link" href="${item.link}" target="_blank" rel="noopener noreferrer">${item.link}</a>
-        <span class="rec-date">Apareceu em ${item.appearedAt}</span>
       `;
       list.appendChild(li);
     });

@@ -38,9 +38,8 @@ async function apiSetup() {
     {
       link: "https://www.instagram.com/reel/paraadmin",
       network: "Instagram",
-      format: "Reels",
-      appearedAt: "2026-09-29",
       reason: "Aparece muito treino puxado",
+      perceivedSubjects: ["Corpo e aparência"],
     },
     token
   );

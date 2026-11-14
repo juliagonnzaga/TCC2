@@ -151,9 +151,8 @@ async function call(method, path, body, token) {
     {
       link: "https://www.instagram.com/reel/antes-do-tcle",
       network: "Instagram",
-      format: "Reels",
-      appearedAt: "2026-10-10",
       reason: "teste",
+      perceivedSubjects: ["Corpo e aparência"],
     },
     token
   );
@@ -182,8 +181,6 @@ async function call(method, path, body, token) {
   const noAuth = await call("POST", "/api/recommendations", {
     link: "https://www.instagram.com/reel/x",
     network: "Instagram",
-    format: "Reels",
-    appearedAt: "2026-10-10",
     reason: "teste",
   });
   ok(noAuth.status === 401, "envio sem login (sem token) é rejeitado");
@@ -197,28 +194,11 @@ async function call(method, path, body, token) {
     {
       link: "não é um link",
       network: "Instagram",
-      format: "Reels",
-      appearedAt: "2026-10-10",
       reason: "teste",
     },
     token
   );
   ok(badLink.status === 400, "link inválido é rejeitado");
-
-  const futureDate = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const badDate = await call(
-    "POST",
-    "/api/recommendations",
-    {
-      link: "https://www.instagram.com/reel/x",
-      network: "Instagram",
-      format: "Reels",
-      appearedAt: futureDate,
-      reason: "teste",
-    },
-    token
-  );
-  ok(badDate.status === 400, "data no futuro é rejeitada (defeito corrigido na Sprint 4)");
 
   let lastRemaining = null;
   let firstRecommendationId = null;
@@ -229,9 +209,8 @@ async function call(method, path, body, token) {
       {
         link: `https://www.instagram.com/reel/teste-${i}`,
         network: "Instagram",
-        format: "Reels",
-        appearedAt: "2026-10-10",
         reason: `motivo ${i}`,
+        perceivedSubjects: ["Corpo e aparência"],
       },
       token
     );
@@ -247,9 +226,8 @@ async function call(method, path, body, token) {
     {
       link: "https://www.instagram.com/reel/teste-4",
       network: "Instagram",
-      format: "Reels",
-      appearedAt: "2026-10-10",
       reason: "motivo 4",
+      perceivedSubjects: ["Corpo e aparência"],
     },
     token
   );
@@ -446,6 +424,108 @@ async function call(method, path, body, token) {
       !reportText.toLowerCase().includes("participantid") &&
       !reportText.toLowerCase().includes("\"link\""),
     "relatório público não vaza link, e-mail ou participantId"
+  );
+
+  // -------- Campos novos (pedido da Julia): rede ampliada, assunto --------
+  // -------- percebido pela participante, como se sentiu --------
+  // Usa uma participante própria pra não interferir na contagem de itens
+  // usada nos testes do relatório público acima.
+  console.log("Campos novos — rede ampliada, assunto percebido, como se sentiu");
+
+  const email2 = `participante-camposnovos-${Date.now()}@example.com`;
+  const { token: token2 } = (await call("POST", "/api/participants/register", {
+    email: email2,
+    password: "senha123",
+  })).data;
+  await call("POST", "/api/participants/accept-tcle", undefined, token2);
+
+  const baseBody = {
+    link: "https://www.instagram.com/reel/campos-novos",
+    reason: "teste de campos novos",
+  };
+
+  const outraSemNome = await call(
+    "POST",
+    "/api/recommendations",
+    { ...baseBody, network: "Outra", perceivedSubjects: ["Corpo e aparência"] },
+    token2
+  );
+  ok(outraSemNome.status === 400, "rede \"Outra\" sem dizer qual rede é rejeitada");
+
+  const semAssunto = await call(
+    "POST",
+    "/api/recommendations",
+    { ...baseBody, network: "Instagram" },
+    token2
+  );
+  ok(semAssunto.status === 400, "envio sem nenhum assunto percebido é rejeitado");
+
+  const assuntoDemais = await call(
+    "POST",
+    "/api/recommendations",
+    {
+      ...baseBody,
+      network: "Instagram",
+      perceivedSubjects: ["Corpo e aparência", "Autoestima e bem-estar", "Beleza, moda e estética"],
+    },
+    token2
+  );
+  ok(assuntoDemais.status === 400, "mais de 2 assuntos percebidos é rejeitado");
+
+  const assuntoInvalido = await call(
+    "POST",
+    "/api/recommendations",
+    { ...baseBody, network: "Instagram", perceivedSubjects: ["assunto-que-não-existe"] },
+    token2
+  );
+  ok(assuntoInvalido.status === 400, "assunto percebido fora da lista é rejeitado");
+
+  const sentimentoInvalido = await call(
+    "POST",
+    "/api/recommendations",
+    {
+      ...baseBody,
+      network: "Instagram",
+      perceivedSubjects: ["Corpo e aparência"],
+      feelings: ["sentimento-que-não-existe"],
+    },
+    token2
+  );
+  ok(sentimentoInvalido.status === 400, "sentimento fora da lista é rejeitado");
+
+  const comFacebookSemSentimento = await call(
+    "POST",
+    "/api/recommendations",
+    { ...baseBody, network: "Facebook", perceivedSubjects: ["Corpo e aparência"] },
+    token2
+  );
+  ok(
+    comFacebookSemSentimento.status === 201 &&
+      comFacebookSemSentimento.data.recommendation.network === "Facebook" &&
+      Array.isArray(comFacebookSemSentimento.data.recommendation.feelings) &&
+      comFacebookSemSentimento.data.recommendation.feelings.length === 0,
+    "rede ampliada (Facebook) é aceita, e \"como se sentiu\" é opcional (vazio por padrão)"
+  );
+
+  const comOutraENome = await call(
+    "POST",
+    "/api/recommendations",
+    {
+      ...baseBody,
+      link: "https://www.pinterest.com/pin/campos-novos",
+      network: "Outra",
+      networkOther: "Pinterest",
+      perceivedSubjects: ["Autoestima e bem-estar", "Beleza, moda e estética"],
+      feelings: ["Incomodada", "Comparada"],
+    },
+    token2
+  );
+  ok(
+    comOutraENome.status === 201 &&
+      comOutraENome.data.recommendation.networkOther === "Pinterest" &&
+      comOutraENome.data.recommendation.perceivedSubjects.length === 2 &&
+      comOutraENome.data.recommendation.feelings.includes("Incomodada"),
+    "rede \"Outra\" com nome, 2 assuntos percebidos e sentimentos são salvos corretamente"
   );
 
   console.log(`\n${passed} ok, ${failed} falha(s).`);
