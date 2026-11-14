@@ -10,7 +10,7 @@ Sistema web desenvolvido como parte do Trabalho de Conclusão de Curso (Monograf
 
 O sistema tem duas pontas:
 
-- **App da participante** — a participante cria uma conta (e-mail + senha) ou entra numa conta já existente, aceita o TCLE (numa etapa própria, só na primeira vez) e envia links de conteúdos que percebeu como recomendados algoritmicamente, indicando rede, formato, data e o motivo de suspeitar da recomendação.
+- **App da participante** — a participante cria uma conta (e-mail + senha) ou entra numa conta já existente, aceita o TCLE (numa etapa própria, só na primeira vez) e envia links de conteúdos que percebeu como recomendados algoritmicamente, indicando rede social, assunto percebido e o motivo de suspeitar da recomendação.
 - **Painel da pesquisadora** — área autenticada em que as avaliadoras categorizam os conteúdos recebidos usando a taxonomia definida na Monografia I, e acompanham indicadores de concordância entre as duas avaliadoras.
 
 A participante se identifica por e-mail e senha (ver [Limitações conhecidas](#limitações-conhecidas) sobre o impacto disso na anonimização). Internamente, cada participante também tem um código (ex.: `P427`), do mesmo jeito que na Sprint 1 — só que agora ele não é mais mostrado a ela: ele existe só para o painel da pesquisadora continuar identificando os envios sem nunca expor o e-mail às avaliadoras.
@@ -22,7 +22,9 @@ A participante se identifica por e-mail e senha (ver [Limitações conhecidas](#
 - "Esqueci minha senha" a partir da tela de login: pede e-mail da conta + senha nova, e mostra um modal confirmando a troca. Redefinir a senha invalida qualquer sessão aberta dessa conta (ver [Limitações conhecidas](#limitações-conhecidas) sobre a falta de verificação por e-mail nesse fluxo).
 - Termo de Consentimento Livre e Esclarecido (TCLE), numa tela própria logo depois do login/cadastro, com registro do aceite e data/hora. O aceite é por conta, não por sessão: numa próxima vez que a mesma conta entra (de qualquer dispositivo), pula direto pras instruções, sem mostrar o TCLE de novo.
 - Tela de instruções de coleta.
-- Envio de recomendações por link do post/Reels (rede, formato, data e motivo), limitado a 3 envios por participante.
+- Envio de recomendações por link do post/Reels (rede social — Instagram, TikTok, Facebook, YouTube, X ou Outra, com campo de texto + botão pra confirmar o nome quando for "Outra" —, assunto que a PARTICIPANTE percebe no conteúdo e motivo), sem limite de envios por participante. Pedido da Julia: os campos "formato" e "data em que apareceu" foram retirados do formulário; e, depois (nov/2026), o limite de 3 envios por participante (antes previsto na Seção 3.3.1 da Monografia 1) também foi removido — a tela de status não mostra mais "(X de 3)", só "Seus envios".
+- "Como você se sentiu ao ver esse conteúdo?" — campo opcional, multi-seleção, logo depois do motivo.
+- Pedido da Julia: o "assunto percebido" é a interpretação da PARTICIPANTE, intencionalmente separado da categorização feita pela pesquisadora (taxonomia da Monografia I, só no painel) — dá pra comparar os dois depois, mas um nunca substitui o outro nem entra no cálculo de concordância entre avaliadoras.
 - Acompanhamento do status dos próprios envios.
 - Botão "← Voltar" em todas as telas, para a participante poder revisar a tela anterior a qualquer momento. Ao voltar até a tela de login já estando logada, ou até a tela de TCLE já tendo aceitado, aparece um aviso em vez dos formulários/TCLE de novo, para não tentar criar outra conta ou aceitar duas vezes por engano.
 - Botão "Sair da conta" na tela de status dos envios.
@@ -36,14 +38,15 @@ A participante se identifica por e-mail e senha (ver [Limitações conhecidas](#
 - Resultados do questionário SUS: pontuação média, classificação, contribuição por afirmação e respostas individuais.
 
 **Relatório público — dados abertos (`/resultados.html`)**
-- Mostra: itens coletados, % categorizados, % de concordância entre avaliadoras, e a distribuição por rede social, formato, categoria (taxonomia da Monografia I), tom, intenção comercial e edição aparente.
+- Decisão da Julia: a categorização em si continua atrás de login (a métrica de concordância depende de saber quem é a avaliadora A e quem é a B), mas os **resultados agregados** ficam abertos, sem login, pra qualquer pessoa explorar — alinhado com princípios de ciência aberta, e citado no TCLE como uso "sempre de forma agregada, sem identificação individual".
+- Mostra: itens coletados, % categorizados, % de concordância entre avaliadoras, e a distribuição por rede social, categoria (taxonomia da Monografia I, atribuída pela pesquisadora), assunto percebido pelas participantes, tom, intenção comercial, edição aparente e como as participantes se sentiram.
 - Nunca expõe link, código interno, participantId, data por item ou o motivo (texto livre) de nenhum envio — só contagens agregadas (`GET /api/public/report`). Isso é intencional: além de proteger a participante, o link enviado aponta pro post de **outra pessoa**, que nunca consentiu em entrar numa base pública (ver limitação "Mudança de protocolo" abaixo).
 - Acessível a partir de um link na tela de login da participante ("Ver resultados da pesquisa (dados abertos)").
 
 **Testes (Sprint 4)**
 - Questionário System Usability Scale (SUS) digital (`/sus.html`), aplicado às usuárias após a execução de tarefas representativas do protocolo de coleta — ver [`docs/guia-teste-usabilidade.md`](docs/guia-teste-usabilidade.md).
 - Testes funcionais automatizados cobrindo os critérios de aceitação de cada User Story das Sprints 1 a 5 (`tests/test-acceptance.js`).
-- Um defeito encontrado durante os testes foi corrigido: o envio de recomendação aceitava uma data futura como "data em que apareceu"; agora é validado.
+- Um defeito encontrado durante os testes foi corrigido: o envio de recomendação aceitava uma data futura como "data em que apareceu" (esse campo foi depois retirado do formulário, a pedido da Julia — ver "Funcionalidades" acima).
 
 **Login da participante (Sprint 5)**
 - Cadastro com e-mail e senha, login, verificação de sessão e logout, substituindo o fluxo de TCLE + código anônimo gerado por sessão.
@@ -80,7 +83,7 @@ npm test                          # em outro terminal
 
 1. `test-flow.js` — fluxo da participante de ponta a ponta (cadastro, TCLE, envio, status, logout, login, esqueci minha senha);
 2. `test-admin-flow.js` — fluxo do painel da pesquisadora de ponta a ponta, incluindo "esqueci minha senha" (a senha original é restaurada no final do teste);
-3. `test-acceptance.js` — testes funcionais dos critérios de aceitação de todas as User Stories (Sprints 1-5), direto na API, incluindo o relatório público (`/api/public/report`): agregação correta e, principalmente, que nenhum link/e-mail/participantId vaza;
+3. `test-acceptance.js` — testes funcionais dos critérios de aceitação de todas as User Stories (Sprints 1-5), direto na API, incluindo o relatório público (`/api/public/report`) e os campos novos de rede ampliada/assunto percebido/como se sentiu (validações e persistência correta);
 4. `test-sus-flow.js` — fluxo do questionário SUS de ponta a ponta, conferindo a pontuação no painel;
 5. `test-back-navigation.js` — botão "← Voltar" em todas as telas da participante, incluindo a regra de não tentar criar outra conta ao voltar para o login, nem aceitar o TCLE de novo ao voltar pra essa tela, já tendo feito isso antes.
 
@@ -135,8 +138,9 @@ A Sprint 4 preparou o **instrumento** (questionário SUS digital) e o **roteiro*
 - **Mudança de protocolo (print → link)**: o protocolo original (Monografia I) previa envio de print anonimizado pela participante, ocultando terceiros antes de enviar. Para reduzir fricção, a coleta passou a ser por link do post/Reels, o que remove essa etapa de anonimização — quem acessa o link vê o conteúdo original, incluindo perfil e comentários de terceiros. Antes de submissão ao Comitê de Ética (Plataforma Brasil) ou coleta real, isso precisa ser refletido no texto do protocolo (TCLE, objetivos, resumo) e decidido como tratar a exposição de terceiros.
 - **Stack trocada (Flutter → HTML/CSS/JS)**: a tecnologia de implementação foi trocada para viabilizar o desenvolvimento dentro do prazo. A Seção 3.5.2 da metodologia, já entregue, ainda cita Flutter e precisa ser atualizada.
 - **Login da pesquisadora simplificado**: usa senha única compartilhada entre as avaliadoras + escolha manual de "sou a avaliadora A ou B" a cada sessão, em vez de contas individuais de verdade. Suficiente para segregar categorizações e calcular concordância, mas não é autenticação real.
+- **"Assunto percebido" e "como se sentiu" são autorrelato, não validado**: ao contrário da categorização da pesquisadora (que passa por duas avaliadoras e cálculo de concordância), esses dois campos são preenchidos livremente pela própria participante, sem nenhuma checagem de consistência entre participantes. São úteis como uma segunda perspectiva (percepção de quem recebeu o conteúdo) a ser comparada com a categorização treinada — não como substituto dela.
 - **Relatório público sem limite de acesso**: `/api/public/report` e `/resultados.html` não exigem login de propósito (dados abertos), mas também não têm nenhum limite de requisições — antes de divulgar o link publicamente em escala, vale considerar algum rate limiting básico, só por robustez (não é um risco de privacidade, já que o endpoint não devolve nada identificável).
-
+- **"Esqueci minha senha" do painel sem exigir a senha atual (decisão da Julia)**: como a senha do painel é única e compartilhada (não uma conta por avaliadora), redefini-la sem pedir a senha atual significa que qualquer pessoa que encontre o endereço do painel consegue trocar essa senha sem provar que já a conhecia — diferente do "esqueci minha senha" da participante, que exige saber o e-mail de uma conta que já existe. Mantido assim por decisão explícita, para ficar igual ao fluxo da participante; se o painel for exposto fora de uma rede controlada antes de uma coleta real, vale revisitar (por exemplo, exigindo a senha atual também).
 - **Troca de senha do painel não sobrevive a um reinício do servidor**: igual às sessões de login (ver item acima), a senha trocada pelo "esqueci minha senha" do painel vive só em memória. Reiniciar o servidor volta a usar o valor de `ADMIN_PASSWORD` (ou o padrão de desenvolvimento).
 - **Sessões de login em memória**: tanto o login da participante quanto o da pesquisadora guardam os tokens válidos só em memória no servidor (não em banco). Reiniciar o servidor invalida as sessões abertas — a pessoa precisa entrar de novo (mas a conta e os dados continuam lá). Suficiente para o MVP; antes de uma coleta real, vale revisar junto com a troca do armazenamento em JSON.
 - **"Esqueci minha senha" sem verificação por e-mail**: como o sistema não tem envio de e-mail configurado, o fluxo troca a senha só com base no e-mail informado, sem confirmar que quem está pedindo a troca é realmente dona daquela conta (não existe link de verificação por e-mail). Aceitável para um MVP acadêmico com participantes conhecidas durante o desenvolvimento, mas precisa virar um fluxo com verificação por e-mail antes de uma coleta real com pessoas desconhecidas na internet.

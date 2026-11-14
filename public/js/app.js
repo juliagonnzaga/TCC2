@@ -471,7 +471,7 @@ submitForm.addEventListener("submit", async (event) => {
     networkOtherConfirmed.hidden = true;
     enforceMaxTwoSubjects();
     submitProgress.textContent = "Cole o link do post ou Reels que apareceu para você.";
-    showSubmitSuccessModal(data.remaining, data.totalForParticipant);
+    showSubmitSuccessModal(data.totalForParticipant);
   } catch (err) {
     showError("submit-error", err.message);
   } finally {
@@ -491,14 +491,12 @@ const submitSuccessModal = document.getElementById("submit-success-modal");
 const submitSuccessMessage = document.getElementById("submit-success-message");
 const btnModalNew = document.getElementById("btn-modal-new");
 
-function showSubmitSuccessModal(remaining, totalForParticipant) {
-  if (remaining > 0) {
-    submitSuccessMessage.textContent = `Você ainda pode enviar mais ${remaining} recomendação(ões), até ${totalForParticipant + remaining} no total.`;
-    btnModalNew.hidden = false;
-  } else {
-    submitSuccessMessage.textContent = "Você já enviou o máximo de 3 recomendações. Muito obrigada por participar!";
-    btnModalNew.hidden = true;
-  }
+// Pedido da Julia (nov/2026): não há mais limite de envios por
+// participante, então o modal só confirma o recebimento — sem falar em
+// "restam X" nem travar o botão de enviar outra recomendação.
+function showSubmitSuccessModal(totalForParticipant) {
+  submitSuccessMessage.textContent = `Recomendação recebida! Você já enviou ${totalForParticipant} no total. Muito obrigada por participar!`;
+  btnModalNew.hidden = false;
   submitSuccessModal.hidden = false;
 }
 
@@ -537,7 +535,9 @@ async function refreshStatus() {
     }
     const data = await res.json();
 
-    title.textContent = `Seus envios (${data.total} de ${data.max})`;
+    // Pedido da Julia (nov/2026): tirou o "(0 de 3)" do título, já que não
+    // há mais limite de envios por participante.
+    title.textContent = "Seus envios";
     emptyMsg.hidden = data.total > 0;
 
     data.items.forEach((item) => {

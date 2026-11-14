@@ -312,8 +312,6 @@ app.post("/api/participants/accept-tcle", requireParticipantAuth, (req, res) => 
 
 /* ===================== Sprint 2: Coleta de recomendações ===================== */
 
-const MAX_RECOMMENDATIONS_PER_PARTICIPANT = 3;
-
 /**
  * Pedido da Julia: ampliar a lista de redes (antes só Instagram/TikTok/
  * Outra) e dois campos novos preenchidos pela PARTICIPANTE — importante:
@@ -360,10 +358,9 @@ function isValidUrl(value) {
  * Sub-tarefa: "Serviço de recebimento e armazenamento da recomendação (back-end)"
  * Identifica a participante pelo token de login (Sprint 5 — antes era
  * pelo código anônimo enviado no corpo da requisição) e recebe o link
- * do conteúdo, rede, formato, data em que apareceu e o motivo
- * percebido. Limita a 3 recomendações por participante, conforme o
- * protocolo (Seção 3.3.1 da Monografia 1: "até três recomendações
- * elegíveis").
+ * do conteúdo, rede e o motivo percebido. Pedido da Julia: não há mais
+ * limite de envios por participante (antes era até 3, Seção 3.3.1 da
+ * Monografia 1 — decisão revista).
  */
 app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
   // Pedido da Julia: "formato" e "data em que apareceu" saíram do
@@ -427,11 +424,6 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
   const existingForParticipant = recommendations.filter(
     (r) => r.participantId === participant.id
   );
-  if (existingForParticipant.length >= MAX_RECOMMENDATIONS_PER_PARTICIPANT) {
-    return res.status(409).json({
-      error: `Você já enviou ${MAX_RECOMMENDATIONS_PER_PARTICIPANT} recomendações, o máximo previsto pelo protocolo. Obrigada pela participação!`,
-    });
-  }
 
   const record = {
     id: crypto.randomUUID(),
@@ -455,7 +447,6 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
   res.status(201).json({
     recommendation: record,
     totalForParticipant: existingForParticipant.length + 1,
-    remaining: MAX_RECOMMENDATIONS_PER_PARTICIPANT - (existingForParticipant.length + 1),
   });
 });
 
@@ -472,7 +463,6 @@ app.get("/api/recommendations", requireParticipantAuth, (req, res) => {
   res.json({
     items: recommendations,
     total: recommendations.length,
-    max: MAX_RECOMMENDATIONS_PER_PARTICIPANT,
   });
 });
 

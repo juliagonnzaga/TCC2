@@ -200,7 +200,6 @@ async function call(method, path, body, token) {
   );
   ok(badLink.status === 400, "link inválido é rejeitado");
 
-  let lastRemaining = null;
   let firstRecommendationId = null;
   for (let i = 1; i <= 3; i++) {
     const res = await call(
@@ -216,28 +215,13 @@ async function call(method, path, body, token) {
     );
     ok(res.status === 201, `envio ${i}/3 é aceito`);
     if (i === 1) firstRecommendationId = res.data.recommendation.id;
-    lastRemaining = res.data.remaining;
   }
-  ok(lastRemaining === 0, "após 3 envios, não resta nenhum (remaining === 0)");
-
-  const fourth = await call(
-    "POST",
-    "/api/recommendations",
-    {
-      link: "https://www.instagram.com/reel/teste-4",
-      network: "Instagram",
-      reason: "motivo 4",
-      perceivedSubjects: ["Corpo e aparência"],
-    },
-    token
-  );
-  ok(fourth.status === 409, "4º envio é bloqueado pelo limite de 3 por participante");
 
   const statusNoAuth = await call("GET", "/api/recommendations");
   ok(statusNoAuth.status === 401, "consulta de status sem login é bloqueada");
 
   const status = await call("GET", "/api/recommendations", undefined, token);
-  ok(status.status === 200 && status.data.total === 3 && status.data.max === 3, "status dos envios mostra 3 de 3");
+  ok(status.status === 200 && status.data.total === 3, "status dos envios mostra o total de 3 envios");
 
   // -------- Sprint 3: painel da pesquisadora --------
   console.log("Sprint 3 — painel da pesquisadora");
@@ -526,6 +510,44 @@ async function call(method, path, body, token) {
       comOutraENome.data.recommendation.perceivedSubjects.length === 2 &&
       comOutraENome.data.recommendation.feelings.includes("Incomodada"),
     "rede \"Outra\" com nome, 2 assuntos percebidos e sentimentos são salvos corretamente"
+  );
+
+  // -------- Sem limite de envios (pedido da Julia, nov/2026) --------
+  // Antes havia um teto de 3 recomendações por participante (Seção 3.3.1
+  // da Monografia 1); a Julia decidiu remover esse limite. Usa uma
+  // participante própria (token3) pra não mexer na contagem de 3 itens
+  // usada pelos testes do painel/relatório público acima.
+  console.log("Sem limite de envios");
+
+  const { token: token3 } = (await call("POST", "/api/participants/register", {
+    email: `participante-semlimite-${Date.now()}@example.com`,
+    password: "senha123",
+  })).data;
+  await call("POST", "/api/participants/accept-tcle", undefined, token3);
+
+  let semLimiteOk = true;
+  for (let i = 1; i <= 4; i++) {
+    const res = await call(
+      "POST",
+      "/api/recommendations",
+      {
+        link: `https://www.instagram.com/reel/sem-limite-${i}`,
+        network: "Instagram",
+        reason: `motivo ${i}`,
+        perceivedSubjects: ["Corpo e aparência"],
+      },
+      token3
+    );
+    if (res.status !== 201) semLimiteOk = false;
+  }
+  ok(semLimiteOk, "4 envios seguidos (mais do que o antigo limite de 3) são todos aceitos");
+
+  const statusSemLimite = await call("GET", "/api/recommendations", undefined, token3);
+  ok(
+    statusSemLimite.status === 200 &&
+      statusSemLimite.data.total === 4 &&
+      statusSemLimite.data.max === undefined,
+    "status dos envios mostra o total (4), sem campo de máximo"
   );
 
   console.log(`\n${passed} ok, ${failed} falha(s).`);

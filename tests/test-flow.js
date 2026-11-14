@@ -63,14 +63,17 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   await page.screenshot({ path: "shot-4-submit.png" });
   await page.click('#submit-form button[type=submit]');
 
-  // Modal de confirmação de envio (feedback após enviar)
+  // Modal de confirmação de envio (feedback após enviar). Pedido da Julia
+  // (nov/2026): não há mais limite de envios, então a mensagem só confirma
+  // o recebimento (sem falar em "restam X") e o botão de nova
+  // recomendação sempre aparece.
   await page.waitForSelector("#submit-success-modal:not([hidden])");
   const modalMessage = await page.locator("#submit-success-message").innerText();
-  if (!modalMessage.includes("mais 2")) {
+  if (!modalMessage.includes("enviou 1 no total")) {
     throw new Error(`Mensagem do modal de confirmação inesperada: "${modalMessage}"`);
   }
   if (await page.locator("#btn-modal-new").isHidden()) {
-    throw new Error("Botão 'Enviar nova recomendação' deveria aparecer no modal (ainda restam envios)");
+    throw new Error("Botão 'Enviar nova recomendação' deveria sempre aparecer no modal (sem limite de envios)");
   }
 
   // Screen 4 -> 5: status dos envios (via botão do modal)
@@ -80,8 +83,10 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   await page.waitForSelector(".rec-item");
   const itemCount = await page.locator(".rec-item").count();
   if (itemCount !== 1) throw new Error(`Esperava 1 item na lista de envios, encontrei ${itemCount}`);
+  // Pedido da Julia (nov/2026): o título não mostra mais "(X de Y)", já
+  // que não há limite de envios por participante.
   const statusTitle = await page.locator("#status-title").innerText();
-  if (!statusTitle.includes("1 de 3")) throw new Error(`Título de status inesperado: ${statusTitle}`);
+  if (statusTitle !== "Seus envios") throw new Error(`Título de status inesperado: ${statusTitle}`);
   await page.screenshot({ path: "shot-5-status.png" });
 
   // Confirma que o link enviado aparece na lista
