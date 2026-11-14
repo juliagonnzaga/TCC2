@@ -223,8 +223,7 @@
               recomendação algorítmica;
             </li>
             <li>
-              Opcionalmente, contar como você se sentiu ao ver aquele
-              conteúdo (não é obrigatório).
+              Informar como você se sentiu ao ver aquele conteúdo.
             </li>
           </ul>
           <p>
@@ -466,8 +465,8 @@
           </label>
 
           <fieldset class="field">
-            <legend>Como você se sentiu ao ver esse conteúdo? (opcional)</legend>
-            <p class="hint">Pode marcar mais de uma opção, ou nenhuma.</p>
+            <legend>Como você se sentiu ao ver esse conteúdo?</legend>
+            <p class="hint">Pode marcar mais de uma opção.</p>
             <div class="chip-group" id="rec-feelings-group">
               <label class="chip"><input type="checkbox" name="rec-feeling" value="Identificada" /><span>Identificada</span></label>
               <label class="chip"><input type="checkbox" name="rec-feeling" value="Motivada" /><span>Motivada</span></label>
@@ -482,6 +481,11 @@
               <label class="chip"><input type="checkbox" name="rec-feeling" value="Outra" /><span>Outra</span></label>
             </div>
           </fieldset>
+
+          <label class="field" id="rec-feeling-other-field" hidden>
+            <span>Como se sentiu?</span>
+            <input type="text" id="rec-feeling-other" placeholder="Escreva como se sentiu" maxlength="120" />
+          </label>
 
           <button type="submit" class="btn btn-primary">Enviar</button>
           <p class="error-msg" id="submit-error" hidden></p>

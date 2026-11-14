@@ -366,7 +366,7 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
   // Pedido da Julia: "formato" e "data em que apareceu" saíram do
   // formulário (e, com eles, dessa validação — ver histórico do arquivo
   // se precisar recuperar como eram).
-  const { link, network, networkOther, reason, perceivedSubjects, feelings } = req.body || {};
+  const { link, network, networkOther, reason, perceivedSubjects, feelings, feelingOther } = req.body || {};
 
   if (!link || !network || !reason) {
     return res.status(400).json({
@@ -403,10 +403,12 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
   if (!perceivedSubjects.every((s) => PARTICIPANT_SUBJECTS.includes(s))) {
     return res.status(400).json({ error: "Assunto inválido." });
   }
-  // "Como você se sentiu" é opcional — feelings pode vir vazio/ausente.
   const feelingsList = Array.isArray(feelings) ? feelings : [];
   if (!feelingsList.every((f) => VALID_FEELINGS.includes(f))) {
     return res.status(400).json({ error: "Sentimento inválido." });
+  }
+  if (feelingsList.includes("Outra") && !String(feelingOther || "").trim()) {
+    return res.status(400).json({ error: "Escreva como se sentiu, já que escolheu \"Outra\"." });
   }
 
   const participants = readJSON(PARTICIPANTS_FILE);
@@ -438,6 +440,7 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
     reason,
     perceivedSubjects,
     feelings: feelingsList,
+    feelingOther: feelingsList.includes("Outra") ? String(feelingOther).trim() : undefined,
     status: "recebido",
     submittedAt: new Date().toISOString(),
   };

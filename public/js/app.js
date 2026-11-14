@@ -360,6 +360,8 @@ const networkOtherField = document.getElementById("rec-network-other-field");
 const networkOtherInput = document.getElementById("rec-network-other");
 const networkOtherConfirmed = document.getElementById("rec-network-other-confirmed");
 const btnConfirmNetworkOther = document.getElementById("btn-confirm-network-other");
+const feelingOtherField = document.getElementById("rec-feeling-other-field");
+const feelingOtherInput = document.getElementById("rec-feeling-other");
 
 submitForm.addEventListener("change", (event) => {
   if (event.target.name === "rec-network") {
@@ -369,6 +371,10 @@ submitForm.addEventListener("change", (event) => {
     if (!isOther) networkOtherInput.value = "";
   }
   if (event.target.name === "rec-subject") enforceMaxTwoSubjects();
+  if (event.target.name === "rec-feeling" && event.target.value === "Outra") {
+    feelingOtherField.hidden = !event.target.checked;
+    if (!event.target.checked) feelingOtherInput.value = "";
+  }
 });
 
 networkOtherInput.addEventListener("input", () => {
@@ -422,6 +428,7 @@ submitForm.addEventListener("submit", async (event) => {
   const feelings = Array.from(
     submitForm.querySelectorAll('input[name="rec-feeling"]:checked')
   ).map((el) => el.value);
+  const feelingOther = feelingOtherInput.value.trim();
 
   if (!link || !networkInput || !reason) {
     showError("submit-error", "Preencha todos os campos antes de enviar.");
@@ -433,6 +440,14 @@ submitForm.addEventListener("submit", async (event) => {
   }
   if (perceivedSubjects.length === 0) {
     showError("submit-error", "Escolha pelo menos 1 assunto percebido no conteúdo.");
+    return;
+  }
+  if (feelings.length === 0) {
+    showError("submit-error", "Escolha pelo menos 1 opção em como você se sentiu.");
+    return;
+  }
+  if (feelings.includes("Outra") && !feelingOther) {
+    showError("submit-error", "Escreva como você se sentiu, já que escolheu \"Outra\".");
     return;
   }
   if (!state.token) {
@@ -455,6 +470,7 @@ submitForm.addEventListener("submit", async (event) => {
         perceivedSubjects,
         reason,
         feelings,
+        feelingOther: feelings.includes("Outra") ? feelingOther : undefined,
       }),
     });
 
@@ -469,6 +485,7 @@ submitForm.addEventListener("submit", async (event) => {
     submitForm.reset();
     networkOtherField.hidden = true;
     networkOtherConfirmed.hidden = true;
+    feelingOtherField.hidden = true;
     enforceMaxTwoSubjects();
     submitProgress.textContent = "Cole o link do post ou Reels que apareceu para você.";
     showSubmitSuccessModal(data.totalForParticipant);
