@@ -352,20 +352,43 @@ function handleExpiredSession() {
 /* ---------- Tela 4: Envio de recomendação ---------- */
 
 const submitForm = document.getElementById("submit-form");
-const submitProgress = document.getElementById("submit-progress");
 
-/* ---------- Rede social "Outra": mostra/esconde o campo de texto ---------- */
-
-const networkOtherField = document.getElementById("rec-network-other-field");
-const networkOtherInput = document.getElementById("rec-network-other");
-const networkOtherConfirmed = document.getElementById("rec-network-other-confirmed");
-const btnConfirmNetworkOther = document.getElementById("btn-confirm-network-other");
-const feelingOtherField = document.getElementById("rec-feeling-other-field");
-const feelingOtherInput = document.getElementById("rec-feeling-other");
-const ageInput = document.getElementById("rec-age");
+const ageBandSelect = document.getElementById("rec-age-band");
+const linkInput = document.getElementById("rec-link");
+const networkDetected = document.getElementById("rec-network-detected");
 const stateSelect = document.getElementById("rec-state");
 const cityInput = document.getElementById("rec-city");
 const cityList = document.getElementById("rec-city-list");
+
+const NETWORK_HOSTS = [
+  ["instagram.com", "Instagram"],
+  ["tiktok.com", "TikTok"],
+  ["facebook.com", "Facebook"],
+  ["fb.com", "Facebook"],
+  ["fb.watch", "Facebook"],
+  ["youtube.com", "YouTube"],
+  ["youtu.be", "YouTube"],
+  ["twitter.com", "X"],
+  ["x.com", "X"],
+  ["t.co", "X"],
+  ["threads.net", "Threads"],
+  ["threads.com", "Threads"],
+  ["pinterest.com", "Pinterest"],
+  ["pin.it", "Pinterest"],
+  ["kwai.com", "Kwai"],
+  ["reddit.com", "Reddit"],
+  ["linkedin.com", "LinkedIn"],
+];
+
+function detectNetworkName(value) {
+  try {
+    const host = new URL(value).hostname.toLowerCase().replace(/^www\./, "");
+    const match = NETWORK_HOSTS.find(([domain]) => host === domain || host.endsWith(`.${domain}`));
+    return match ? match[1] : host;
+  } catch (err) {
+    return "";
+  }
+}
 
 let availableCities = [];
 let activeCityIndex = -1;
@@ -505,103 +528,72 @@ async function fillCities(uf, selectedCity) {
   }
 }
 
-submitForm.addEventListener("change", (event) => {
-  if (event.target.name === "rec-network") {
-    const isOther = event.target.value === "Outra";
-    networkOtherField.hidden = !isOther;
-    networkOtherConfirmed.hidden = true;
-    if (!isOther) networkOtherInput.value = "";
-  }
-  if (event.target.id === "rec-state") fillCities(event.target.value);
-  if (event.target.name === "rec-subject") enforceMaxTwoSubjects();
-  if (event.target.name === "rec-feeling" && event.target.value === "Outra") {
-    feelingOtherField.hidden = !event.target.checked;
-    if (!event.target.checked) feelingOtherInput.value = "";
-  }
-});
+const MAX_CHOICES = 2;
 
-networkOtherInput.addEventListener("input", () => {
-  networkOtherConfirmed.hidden = true;
-});
-
-// Pedido da Julia: botão ao lado do campo pra confirmar o nome digitado
-// da rede social. É só uma confirmação visual — o valor enviado no envio
-// final vem sempre do campo em si, mesmo que a participante não clique
-// aqui antes de enviar.
-btnConfirmNetworkOther.addEventListener("click", () => {
-  const value = networkOtherInput.value.trim();
-  if (!value) {
-    showError("submit-error", "Digite o nome da rede social antes de confirmar.");
-    return;
-  }
-  hideError("submit-error");
-  networkOtherConfirmed.textContent = `Rede social definida: ${value}`;
-  networkOtherConfirmed.hidden = false;
-});
-
-/* ---------- Assunto percebido: máximo 2, mesmo padrão do painel da pesquisadora ---------- */
-
-function enforceMaxTwoSubjects() {
-  const checked = submitForm.querySelectorAll('input[name="rec-subject"]:checked');
-  const all = submitForm.querySelectorAll('input[name="rec-subject"]');
-  const hint = document.getElementById("rec-subject-hint");
-
-  if (checked.length >= 2) {
-    all.forEach((c) => {
-      if (!c.checked) c.disabled = true;
-    });
-    hint.textContent = "Máximo de 2 assuntos atingido.";
-  } else {
-    all.forEach((c) => (c.disabled = false));
-    hint.textContent = "Escolha até 2 opções.";
-  }
+function checkedValues(name) {
+  return Array.from(submitForm.querySelectorAll(`input[name="${name}"]:checked`)).map(
+    (el) => el.value
+  );
 }
+
+function enforceMaxChoices(name, hintId) {
+  const all = submitForm.querySelectorAll(`input[name="${name}"]`);
+  const full = checkedValues(name).length >= MAX_CHOICES;
+  all.forEach((input) => {
+    if (!input.checked) input.disabled = full;
+  });
+  document.getElementById(hintId).textContent = full
+    ? "Máximo de 2 opções atingido."
+    : "Escolha até 2 opções.";
+}
+
+linkInput.addEventListener("input", () => {
+  const name = linkInput.value.trim() ? detectNetworkName(linkInput.value.trim()) : "";
+  networkDetected.hidden = !name;
+  if (name) networkDetected.textContent = `Rede social identificada: ${name}`;
+});
+
+submitForm.addEventListener("change", (event) => {
+  if (event.target.id === "rec-state") fillCities(event.target.value);
+  if (event.target.name === "rec-why") enforceMaxChoices("rec-why", "rec-why-hint");
+  if (event.target.name === "rec-desired") enforceMaxChoices("rec-desired", "rec-desired-hint");
+});
 
 submitForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   hideError("submit-error");
 
-  const age = Number(ageInput.value);
-  const state = stateSelect.value;
+  const ageBand = ageBandSelect.value;
+  const stateCode = stateSelect.value;
   const city = resolveCity(cityInput.value);
-  const link = document.getElementById("rec-link").value.trim();
-  const networkInput = submitForm.querySelector('input[name="rec-network"]:checked');
-  const networkOther = networkOtherInput.value.trim();
-  const perceivedSubjects = Array.from(
-    submitForm.querySelectorAll('input[name="rec-subject"]:checked')
-  ).map((el) => el.value);
-  const reason = document.getElementById("rec-reason").value.trim();
-  const feelings = Array.from(
-    submitForm.querySelectorAll('input[name="rec-feeling"]:checked')
-  ).map((el) => el.value);
-  const feelingOther = feelingOtherInput.value.trim();
+  const link = linkInput.value.trim();
+  const whyReasons = checkedValues("rec-why");
+  const recurrenceInput = submitForm.querySelector('input[name="rec-recurrence"]:checked');
+  const desiredContent = checkedValues("rec-desired");
+  const comment = document.getElementById("rec-comment").value.trim();
 
-  if (!Number.isInteger(age) || age < 18 || age > 120) {
-    showError("submit-error", "Informe uma idade válida (a partir de 18 anos).");
+  if (!ageBand) {
+    showError("submit-error", "Escolha sua faixa de idade.");
     return;
   }
-  if (!state || !city) {
+  if (!stateCode || !city) {
     showError("submit-error", "Escolha o estado e a cidade onde você mora.");
     return;
   }
-  if (!link || !networkInput || !reason) {
-    showError("submit-error", "Preencha todos os campos antes de enviar.");
+  if (!link) {
+    showError("submit-error", "Cole o link do conteúdo.");
     return;
   }
-  if (networkInput.value === "Outra" && !networkOther) {
-    showError("submit-error", "Diga qual é a rede social, já que escolheu \"Outra\".");
+  if (whyReasons.length === 0) {
+    showError("submit-error", "Escolha pelo menos 1 motivo para não querer continuar vendo o conteúdo.");
     return;
   }
-  if (perceivedSubjects.length === 0) {
-    showError("submit-error", "Escolha pelo menos 1 assunto percebido no conteúdo.");
+  if (!recurrenceInput) {
+    showError("submit-error", "Diga se você costuma encontrar conteúdos parecidos.");
     return;
   }
-  if (feelings.length === 0) {
-    showError("submit-error", "Escolha pelo menos 1 opção em como você se sentiu.");
-    return;
-  }
-  if (feelings.includes("Outra") && !feelingOther) {
-    showError("submit-error", "Escreva como você se sentiu, já que escolheu \"Outra\".");
+  if (desiredContent.length === 0) {
+    showError("submit-error", "Escolha pelo menos 1 opção do que gostaria de ver no lugar.");
     return;
   }
   if (!state.token) {
@@ -618,16 +610,14 @@ submitForm.addEventListener("submit", async (event) => {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({
-        age,
-        state,
+        ageBand,
+        state: stateCode,
         city,
         link,
-        network: networkInput.value,
-        networkOther: networkInput.value === "Outra" ? networkOther : undefined,
-        perceivedSubjects,
-        reason,
-        feelings,
-        feelingOther: feelings.includes("Outra") ? feelingOther : undefined,
+        whyReasons,
+        recurrence: recurrenceInput.value,
+        desiredContent,
+        comment: comment || undefined,
       }),
     });
 
@@ -637,17 +627,15 @@ submitForm.addEventListener("submit", async (event) => {
     }
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Falha ao enviar a recomendação.");
+    if (!res.ok) throw new Error(data.error || "Falha ao registrar o conteúdo.");
 
     submitForm.reset();
-    ageInput.value = age;
-    stateSelect.value = state;
-    await fillCities(state, city);
-    networkOtherField.hidden = true;
-    networkOtherConfirmed.hidden = true;
-    feelingOtherField.hidden = true;
-    enforceMaxTwoSubjects();
-    submitProgress.textContent = "Cole o link do post ou Reels que apareceu para você.";
+    ageBandSelect.value = ageBand;
+    stateSelect.value = stateCode;
+    await fillCities(stateCode, city);
+    networkDetected.hidden = true;
+    enforceMaxChoices("rec-why", "rec-why-hint");
+    enforceMaxChoices("rec-desired", "rec-desired-hint");
     showSubmitSuccessModal(data.totalForParticipant);
   } catch (err) {
     showError("submit-error", err.message);
@@ -672,7 +660,7 @@ const btnModalNew = document.getElementById("btn-modal-new");
 // participante, então o modal só confirma o recebimento — sem falar em
 // "restam X" nem travar o botão de enviar outra recomendação.
 function showSubmitSuccessModal(totalForParticipant) {
-  submitSuccessMessage.textContent = `Recomendação recebida! Você já enviou ${totalForParticipant} no total. Muito obrigada por participar!`;
+  submitSuccessMessage.textContent = `Registro recebido! Você já enviou ${totalForParticipant} no total. Muito obrigada por participar!`;
   btnModalNew.hidden = false;
   submitSuccessModal.hidden = false;
 }
@@ -737,7 +725,6 @@ async function refreshStatus() {
 }
 
 document.getElementById("btn-new-submission").addEventListener("click", () => {
-  submitProgress.textContent = "Cole o link do post ou Reels que apareceu para você.";
   showScreen("submit");
 });
 

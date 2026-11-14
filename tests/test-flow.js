@@ -53,13 +53,15 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   await page.waitForSelector("#screen-submit:not([hidden])");
 
   await page.fill("#rec-link", "https://www.instagram.com/reel/teste123");
-  await page.click('label.chip:has(input[name="rec-network"][value="Instagram"])');
-  // Campos novos (pedido da Julia): assunto percebido (obrigatório, até 2)
-  // e como se sentiu (opcional — deixado em branco aqui de propósito, pra
-  // conferir que o envio funciona sem ele). "Formato" e "Data em que
-  // apareceu" saíram do formulário (pedido da Julia).
-  await page.click('label.chip:has(input[name="rec-subject"][value="Saúde, alimentação e emagrecimento"])');
-  await page.fill("#rec-reason", "Aparece muito conteúdo sobre dieta");
+  await page.selectOption("#rec-age-band", "25 a 34 anos");
+  await page.selectOption("#rec-state", "MG");
+  await page.fill("#rec-city", "belo horizonte");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await page.click('label.chip:has(input[name="rec-why"][value="Incentiva dieta ou emagrecimento"])');
+  await page.click('label.chip:has(input[name="rec-recurrence"][value="Vejo com frequência"])');
+  await page.click('label.chip:has(input[name="rec-desired"][value="Diversidade de corpos"])');
+  await page.fill("#rec-comment", "Aparece muito conteúdo sobre dieta");
   await page.screenshot({ path: "shot-4-submit.png" });
   await page.click('#submit-form button[type=submit]');
 

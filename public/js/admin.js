@@ -255,6 +255,12 @@ function enforceMaxTwoCategories() {
   }
 }
 
+function participantReasonText(item) {
+  if (!Array.isArray(item.whyReasons)) return item.reason || "";
+  const reasons = item.whyReasons.join("; ");
+  return item.comment ? `${reasons} — "${item.comment}"` : reasons;
+}
+
 function openCategorize(id) {
   const item = adminState.queue.find((i) => i.id === id);
   if (!item) return;
@@ -266,7 +272,7 @@ function openCategorize(id) {
   const linkEl = document.getElementById("cat-link");
   linkEl.href = item.link;
   linkEl.textContent = item.link;
-  document.getElementById("cat-reason").textContent = item.reason;
+  document.getElementById("cat-reason").textContent = participantReasonText(item);
 
   renderCategoryChips();
   document.getElementById("categorize-form").reset();

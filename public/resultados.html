@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Resultados da pesquisa</title>
+<title>Fora do Feed · Resultados</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -17,16 +17,18 @@
     depende de saber quem categorizou o quê.
   -->
   <main class="app-shell">
-    <div class="card card-wide">
+    <div class="card card-wide card-results">
       <section id="screen-public-report">
-        <p class="eyebrow">Dados abertos</p>
-        <h1>Resultados da pesquisa</h1>
+        <p class="eyebrow">Fora do Feed · Dados abertos</p>
+        <h1>O que as mulheres estão colocando Fora do Feed?</h1>
         <p class="lead">
-          Conteúdos sobre corpo recomendados algoritmicamente em redes
-          sociais, coletados e categorizados como parte de um Trabalho de
-          Conclusão de Curso em Ciência da Computação (UFOP). Os números
-          abaixo são agregados e anônimos — nenhum link, participante ou
-          item individual é exibido aqui.
+          Viu algo que não queria ver? Registre. O Fora do Feed reúne
+          conteúdos de redes sociais que mulheres não gostariam de continuar
+          vendo em seus feeds, como parte de um Trabalho de Conclusão de
+          Curso em Ciência da Computação (UFOP). Os números abaixo são
+          agregados, anônimos e representam apenas as participantes da
+          pesquisa, não todas as mulheres. Nenhum link, participante ou
+          registro individual é exibido aqui.
         </p>
 
         <div id="report-loading" class="hint">Carregando dados…</div>
@@ -36,7 +38,7 @@
           <div class="report-stats">
             <div class="report-stat">
               <div class="stat-value" id="stat-items-coletados">—</div>
-              <div class="stat-label">itens coletados</div>
+              <div class="stat-label">registros</div>
             </div>
             <div class="report-stat">
               <div class="stat-value" id="stat-items-categorizados">—</div>
@@ -49,24 +51,139 @@
           </div>
 
           <div class="report-section">
-            <h2>Rede social</h2>
+            <h2>O que mais sai do feed</h2>
+            <p class="map-note">
+              Motivos apontados pelas participantes. Cada registro pode ter
+              até 2 motivos, então os percentuais somam mais de 100%.
+            </p>
+            <div id="bars-motivos"></div>
+          </div>
+
+          <div class="report-section" id="map-section">
+            <h2>Mapa por estado</h2>
+            <p class="map-note">
+              Passe o mouse ou toque em um estado para ver os dados das
+              participantes dali. Os dados representam apenas as participantes
+              da pesquisa. Os detalhes só aparecem quando pelo menos
+              <span id="map-min-participants">3</span> participantes
+              diferentes registraram conteúdos do estado, para preservar o
+              anonimato.
+            </p>
+            <label class="field map-metric">
+              <span>Colorir o mapa por</span>
+              <select id="map-metric"></select>
+            </label>
+            <div class="map-layout">
+              <div class="map-wrap">
+                <svg id="brazil-map" role="group" aria-label="Mapa do Brasil por estado"></svg>
+                <div class="map-legend">
+                  <div class="map-legend-row">
+                    <span id="map-legend-min"></span>
+                    <div class="map-legend-scale"></div>
+                    <span id="map-legend-max"></span>
+                  </div>
+                  <div class="map-legend-keys">
+                    <span><i class="map-key map-key-few"></i>poucos dados</span>
+                    <span><i class="map-key map-key-none"></i>sem envios</span>
+                  </div>
+                </div>
+              </div>
+              <aside class="map-panel" aria-live="polite">
+                <p class="map-panel-empty" id="map-panel-empty">
+                  Escolha um estado no mapa.
+                </p>
+                <div id="map-panel-detail" hidden>
+                  <h3 id="map-state-name"></h3>
+                  <p class="map-note" id="map-state-note" hidden></p>
+                  <div id="map-state-data" hidden>
+                    <div class="report-stats map-state-stats">
+                      <div class="report-stat">
+                        <div class="stat-value" id="map-stat-total">—</div>
+                        <div class="stat-label">registros</div>
+                      </div>
+                      <div class="report-stat">
+                        <div class="stat-value" id="map-stat-participantes">—</div>
+                        <div class="stat-label">participantes</div>
+                      </div>
+                      <div class="report-stat">
+                        <div class="stat-value" id="map-stat-faixa">—</div>
+                        <div class="stat-label">faixa mais comum</div>
+                      </div>
+                    </div>
+                    <h4>Faixa etária</h4>
+                    <div id="map-bars-idade"></div>
+                    <h4>Principais motivos</h4>
+                    <div id="map-bars-motivos"></div>
+                    <h4>Costumam ver conteúdos parecidos?</h4>
+                    <div id="map-bars-recorrencia"></div>
+                    <h4>O que gostariam de ver no lugar</h4>
+                    <div id="map-bars-desejados"></div>
+                    <h4>Rede social</h4>
+                    <div id="map-bars-rede"></div>
+                  </div>
+                </div>
+              </aside>
+            </div>
+            <p class="report-empty" id="map-error" hidden>Não foi possível carregar o mapa agora.</p>
+            <p class="map-note">Mapa do Brasil: @svg-maps/brazil, licença CC BY 4.0.</p>
+          </div>
+
+          <div class="report-section">
+            <h2>Quais conteúdos são mais recorrentes?</h2>
+            <p class="map-note">
+              Em cada motivo, a parte dos registros em que a participante
+              disse encontrar conteúdos parecidos com frequência (n = total
+              de registros com aquele motivo).
+            </p>
+            <div id="bars-recorrencia-motivo"></div>
+            <h3 class="report-subtitle">Em geral, você costuma encontrar conteúdos parecidos?</h3>
+            <div id="bars-recorrencia"></div>
+          </div>
+
+          <div class="report-section">
+            <h2>O que elas gostariam de ver no lugar</h2>
+            <p class="map-note">
+              Cada registro pode ter até 2 opções, então os percentuais somam
+              mais de 100%.
+            </p>
+            <div id="bars-desejados"></div>
+          </div>
+
+          <div class="report-section">
+            <h2>Diferenças por faixa etária</h2>
+            <p class="map-note">
+              Percentual dos registros de cada faixa etária. Faixas com menos
+              de <span id="matrix-min-participants">3</span> participantes
+              aparecem como "poucos dados".
+            </p>
+            <label class="field map-metric">
+              <span>Cruzar faixa etária com</span>
+              <select id="matrix-metric">
+                <option value="motivos">Motivos para colocar Fora do Feed</option>
+                <option value="desejados">O que gostariam de ver no lugar</option>
+                <option value="recorrencia">Costumam ver conteúdos parecidos?</option>
+              </select>
+            </label>
+            <div class="matrix-wrap" id="age-matrix"></div>
+          </div>
+
+          <div class="report-section">
+            <h2>Rede social (identificada pelo link)</h2>
             <div id="bars-rede"></div>
+          </div>
+
+          <div class="report-section report-analysis">
+            <h2 class="report-analysis-title">Análise da pesquisadora</h2>
+            <p class="map-note">
+              Características dos conteúdos definidas na etapa de análise,
+              feitas pela pesquisadora, e não respondidas pelas participantes.
+            </p>
           </div>
 
           <div class="report-section">
             <h2>Categorias (taxonomia da Monografia I, atribuída pela pesquisadora)</h2>
             <p class="hint" id="categorias-hint"></p>
             <div id="bars-categorias"></div>
-          </div>
-
-          <!--
-            Pedido da Julia: percepção DA PARTICIPANTE sobre o conteúdo,
-            separada da categorização da pesquisadora acima — dá pra
-            comparar as duas sem misturar as fontes.
-          -->
-          <div class="report-section">
-            <h2>Assunto percebido pelas participantes</h2>
-            <div id="bars-assunto"></div>
           </div>
 
           <div class="report-section">
@@ -84,11 +201,6 @@
             <div id="bars-edicao"></div>
           </div>
 
-          <div class="report-section">
-            <h2>Como as participantes se sentiram (opcional, pode ficar em branco)</h2>
-            <div id="bars-sentimento"></div>
-          </div>
-
           <p class="report-footer-note" id="report-footer-note"></p>
         </div>
 
@@ -99,6 +211,7 @@
     </div>
   </main>
 
+  <script src="js/mapa-brasil.js"></script>
   <script src="js/resultados.js"></script>
 </body>
 </html>

@@ -39,6 +39,68 @@ function renderBars(containerId, items, { emptyMessage, totalForPercent } = {}) 
   }
 }
 
+function renderAgeMatrix(data) {
+  const container = document.getElementById("age-matrix");
+  const select = document.getElementById("matrix-metric");
+  const rowsByMetric = {
+    motivos: data.opcoesMapa.motivos,
+    desejados: data.opcoesMapa.desejados,
+    recorrencia: data.opcoesMapa.recorrencia,
+  };
+
+  function draw() {
+    const metric = select.value;
+    const table = document.createElement("table");
+    table.className = "matrix";
+
+    const head = document.createElement("tr");
+    head.appendChild(document.createElement("th"));
+    data.faixas.forEach((band) => {
+      const th = document.createElement("th");
+      th.textContent = shortBand(band);
+      const group = data.porFaixa[band];
+      const note = document.createElement("small");
+      if (!group) note.textContent = "sem registros";
+      else if (!group.liberado) note.textContent = "poucos dados";
+      else note.textContent = `${group.participantes} participantes`;
+      th.appendChild(note);
+      head.appendChild(th);
+    });
+    table.appendChild(head);
+
+    rowsByMetric[metric].forEach((label) => {
+      const tr = document.createElement("tr");
+      const rowLabel = document.createElement("th");
+      rowLabel.className = "row-label";
+      rowLabel.textContent = label;
+      tr.appendChild(rowLabel);
+
+      data.faixas.forEach((band) => {
+        const td = document.createElement("td");
+        const group = data.porFaixa[band];
+        if (!group || !group.liberado) {
+          td.textContent = "—";
+          td.className = "no-data";
+        } else {
+          const item = group[metric].find((entry) => entry.label === label);
+          const value = item ? item.percent : 0;
+          const alpha = Math.min(0.9, value / 100 + (value > 0 ? 0.08 : 0));
+          td.textContent = `${value}%`;
+          td.style.background = `rgba(123, 63, 228, ${alpha})`;
+          td.style.color = alpha > 0.5 ? "#ffffff" : "";
+        }
+        tr.appendChild(td);
+      });
+      table.appendChild(tr);
+    });
+
+    container.replaceChildren(table);
+  }
+
+  select.addEventListener("change", draw);
+  draw();
+}
+
 async function loadReport() {
   const loading = document.getElementById("report-loading");
   const errorBox = document.getElementById("report-error");
@@ -58,9 +120,16 @@ async function loadReport() {
     renderBars("bars-categorias", data.categorias, {
       emptyMessage: "Ainda não há categorizações registradas.",
     });
-    renderBars("bars-assunto", data.assuntoPercebido, {
-      emptyMessage: "Ainda não há envios com assunto percebido.",
-    });
+    renderBars("bars-motivos", data.motivos, { emptyMessage: "Ainda não há registros." });
+    renderBars(
+      "bars-recorrencia-motivo",
+      data.recorrenciaPorMotivo.map((item) => ({ ...item, label: `${item.label} (n=${item.total})` })),
+      { emptyMessage: "Ainda não há registros." }
+    );
+    renderBars("bars-recorrencia", data.recorrencia, { emptyMessage: "Ainda não há registros." });
+    renderBars("bars-desejados", data.desejados, { emptyMessage: "Ainda não há registros." });
+    document.getElementById("matrix-min-participants").textContent = data.minimoParticipantes;
+    renderAgeMatrix(data);
     renderBars("bars-tom", data.tom, { emptyMessage: "Ainda não há categorizações registradas." });
     renderBars("bars-intencao", data.intencaoComercial, {
       emptyMessage: "Ainda não há categorizações registradas.",
@@ -68,8 +137,9 @@ async function loadReport() {
     renderBars("bars-edicao", data.edicaoAparente, {
       emptyMessage: "Ainda não há categorizações registradas.",
     });
-    renderBars("bars-sentimento", data.comoSeSentiu, {
-      emptyMessage: "Ainda não há respostas (campo opcional).",
+
+    renderBrazilMap(data).catch(() => {
+      document.getElementById("map-error").hidden = false;
     });
 
     const categoriasHint = document.getElementById("categorias-hint");

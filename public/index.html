@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pesquisa - Recomendações em Redes Sociais</title>
+<title>Fora do Feed</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -24,15 +24,16 @@
               <line x1="20" y1="10" x2="22.3" y2="12.3" stroke="white" stroke-width="1.6" stroke-linecap="round" />
             </svg>
           </div>
-          <p class="brand-name">Pesquisa de TCC &middot; UFOP</p>
+          <p class="brand-name">Fora do Feed &middot; Pesquisa de TCC &middot; UFOP</p>
           <p class="brand-tagline">
-            Uma abordagem para coleta e análise de conteúdos recomendados em
-            redes sociais para o público feminino
+            Viu algo que não queria ver? Registre. Uma plataforma de pesquisa
+            sobre os conteúdos que mulheres não gostariam de continuar vendo
+            em seus feeds
           </p>
         </div>
 
         <p class="eyebrow">1 · Entrar</p>
-        <h1>Bem-vinda à pesquisa</h1>
+        <h1>Bem-vinda ao Fora do Feed</h1>
         <p class="lead">
           Esta pesquisa busca entender que tipo de conteúdo as redes sociais
           recomendam a mulheres, relacionado a corpo e aparência. Para
@@ -191,18 +192,20 @@
 
           <h2>1. Sobre a pesquisa</h2>
           <p>
-            Esta pesquisa investiga conteúdos relacionados a corpo,
-            aparência física e alimentação recomendados por algoritmos de
-            redes sociais, como Instagram e TikTok. O objetivo é entender
-            que tipo de conteúdo esse tipo de recomendação costuma
-            entregar a mulheres.
+            Esta pesquisa, chamada Fora do Feed, investiga conteúdos de
+            redes sociais, como Instagram e TikTok, que mulheres não
+            gostariam de continuar vendo em seus feeds, especialmente os
+            relacionados a corpo, aparência, emagrecimento, beleza e
+            autoestima. O objetivo é entender quais conteúdos as próprias
+            participantes percebem como indesejados e por quê, sem julgar
+            esses conteúdos como bons ou ruins.
           </p>
 
           <h2>2. Quem pode participar</h2>
           <p>
             Mulheres maiores de 18 anos, usuárias de redes sociais, que já
-            tenham notado receber recomendações de conteúdo sobre corpo,
-            aparência ou alimentação nessas plataformas.
+            tenham visto nessas plataformas conteúdos que não gostariam de
+            continuar vendo.
           </p>
 
           <h2>3. O que você vai fazer</h2>
@@ -213,17 +216,15 @@
               acessar a plataforma de qualquer dispositivo;
             </li>
             <li>
-              Enviar, quando quiser, links de publicações que você
-              identificou como recomendadas a você e relacionadas a
-              corpo, aparência ou alimentação;
+              Enviar, quando quiser, links de conteúdos que você viu nas
+              redes sociais e não gostaria de continuar vendo;
             </li>
             <li>
-              Para cada envio, informar a rede social, qual assunto você
-              percebe no conteúdo e por que você suspeita que foi uma
-              recomendação algorítmica;
-            </li>
-            <li>
-              Informar como você se sentiu ao ver aquele conteúdo.
+              Para cada envio, responder a poucas perguntas: por que você
+              não gostaria de continuar vendo aquele conteúdo, se costuma
+              encontrar conteúdos parecidos, o que gostaria de ver no
+              lugar, sua faixa de idade, sua cidade e seu estado e, se
+              quiser, um comentário opcional.
             </li>
           </ul>
           <p>
@@ -263,7 +264,9 @@
             coletados) — sempre de forma agregada, sem qualquer
             identificação individual das participantes, sem o link dos
             conteúdos enviados e sem qualquer outro dado individual por
-            envio.
+            envio. Faixa de idade, cidade e estado também só aparecem de
+            forma agregada, e os detalhes de um estado só são exibidos
+            quando há pelo menos três participantes nele.
           </p>
 
           <h2>7. Participação voluntária</h2>
@@ -331,17 +334,18 @@
 
         <ol class="steps">
           <li>
-            <strong>Use a rede normalmente</strong> e identifique um
-            conteúdo recomendado (Reels, Feed ou Explorar) relacionado a
-            corpo, aparência ou alimentação.
+            <strong>Use a rede normalmente</strong> e, quando aparecer um
+            conteúdo que você não gostaria de continuar vendo (por exemplo,
+            sobre corpo, aparência, emagrecimento ou beleza), registre-o.
           </li>
           <li>
             <strong>Copie o link do post ou Reels</strong> (toque em
             "Compartilhar" → "Copiar link") e cole na plataforma.
           </li>
           <li>
-            <strong>Envie quantas recomendações quiser</strong> pela
-            plataforma, ao longo dos próximos dias.
+            <strong>Responda a poucas perguntas rápidas</strong> sobre o
+            conteúdo, e envie quantos registros quiser, ao longo dos
+            próximos dias.
           </li>
         </ol>
 
@@ -354,25 +358,23 @@
       <!-- User story: Sistema de Envio de Recomendação -->
       <section id="screen-submit" class="screen" data-screen="submit" hidden>
         <button type="button" class="btn-back-link">← Voltar</button>
-        <p class="eyebrow">4 · Enviar recomendação</p>
-        <h1>Enviar recomendação</h1>
+        <p class="eyebrow">4 · Registrar conteúdo</p>
+        <h1>Fora do Feed</h1>
         <p class="lead" id="submit-progress">
-          Cole o link do post ou Reels que apareceu para você.
+          Viu algo que não queria ver? Registre.
         </p>
 
         <form id="submit-form">
           <label class="field">
-            <span>Qual sua idade?</span>
-            <input
-              type="number"
-              id="rec-age"
-              min="18"
-              max="120"
-              step="1"
-              inputmode="numeric"
-              placeholder="ex.: 25"
-              required
-            />
+            <span>Qual sua faixa de idade?</span>
+            <select id="rec-age-band" required>
+              <option value="">Selecione</option>
+              <option value="18 a 24 anos">18 a 24 anos</option>
+              <option value="25 a 34 anos">25 a 34 anos</option>
+              <option value="35 a 44 anos">35 a 44 anos</option>
+              <option value="45 a 54 anos">45 a 54 anos</option>
+              <option value="55 anos ou mais">55 anos ou mais</option>
+            </select>
           </label>
 
           <div class="field-row">
@@ -437,122 +439,56 @@
               placeholder="https://www.instagram.com/reel/..."
               required
             />
+            <p class="hint" id="rec-network-detected" hidden></p>
           </label>
 
           <fieldset class="field">
-            <legend>Rede social</legend>
-            <div class="chip-group" id="rec-network-group">
-              <label class="chip">
-                <input type="radio" name="rec-network" value="Instagram" required />
-                <span>Instagram</span>
-              </label>
-              <label class="chip">
-                <input type="radio" name="rec-network" value="TikTok" />
-                <span>TikTok</span>
-              </label>
-              <label class="chip">
-                <input type="radio" name="rec-network" value="Facebook" />
-                <span>Facebook</span>
-              </label>
-              <label class="chip">
-                <input type="radio" name="rec-network" value="YouTube" />
-                <span>YouTube</span>
-              </label>
-              <label class="chip">
-                <input type="radio" name="rec-network" value="X" />
-                <span>X</span>
-              </label>
-              <label class="chip">
-                <input type="radio" name="rec-network" value="Outra" />
-                <span>Outra</span>
-              </label>
+            <legend>Por que você não gostaria de continuar vendo esse conteúdo?</legend>
+            <p class="hint" id="rec-why-hint">Escolha até 2 opções.</p>
+            <div class="chip-group" id="rec-why-group">
+              <label class="chip"><input type="checkbox" name="rec-why" value="Incentiva dieta ou emagrecimento" /><span>Incentiva dieta ou emagrecimento</span></label>
+              <label class="chip"><input type="checkbox" name="rec-why" value="Impõe um padrão de corpo ou beleza" /><span>Impõe um padrão de corpo ou beleza</span></label>
+              <label class="chip"><input type="checkbox" name="rec-why" value="Me faz comparar ou me sentir inadequada" /><span>Me faz comparar ou me sentir inadequada</span></label>
+              <label class="chip"><input type="checkbox" name="rec-why" value="É publicidade de produtos ou procedimentos estéticos" /><span>É publicidade de produtos ou procedimentos estéticos</span></label>
+              <label class="chip"><input type="checkbox" name="rec-why" value="Mostra uma rotina ou vida idealizada" /><span>Mostra uma rotina ou vida idealizada</span></label>
+              <label class="chip"><input type="checkbox" name="rec-why" value="Sexualiza o corpo da mulher" /><span>Sexualiza o corpo da mulher</span></label>
+              <label class="chip"><input type="checkbox" name="rec-why" value="Não tenho interesse nesse assunto" /><span>Não tenho interesse nesse assunto</span></label>
+              <label class="chip"><input type="checkbox" name="rec-why" value="Outro motivo" /><span>Outro motivo</span></label>
             </div>
           </fieldset>
 
-          <!-- Pedido da Julia: só aparece ao clicar em "Outra" acima, com um botão ao lado pra confirmar o nome digitado. -->
-          <div class="field" id="rec-network-other-field" hidden>
-            <span>Qual rede social?</span>
-            <div class="inline-input-row">
-              <input type="text" id="rec-network-other" placeholder="ex.: Pinterest" maxlength="60" />
-              <button type="button" class="btn-inline" id="btn-confirm-network-other">
-                OK
-              </button>
-            </div>
-            <p class="hint" id="rec-network-other-confirmed" hidden></p>
-          </div>
-
-          <!--
-            Pedido da Julia: percepção DA PARTICIPANTE sobre o assunto —
-            separada da categorização feita pela pesquisadora (taxonomia
-            da Monografia I, só no painel da pesquisadora). Isso permite
-            comparar as duas depois, sem misturar as fontes.
-          -->
           <fieldset class="field">
-            <legend>Qual assunto você percebe nesse conteúdo?</legend>
-            <p class="hint" id="rec-subject-hint">Escolha até 2 opções.</p>
-            <div class="chip-group" id="rec-subject-group">
-              <label class="chip">
-                <input type="checkbox" name="rec-subject" value="Corpo e aparência" />
-                <span>Corpo e aparência</span>
-              </label>
-              <label class="chip">
-                <input type="checkbox" name="rec-subject" value="Autoestima e bem-estar" />
-                <span>Autoestima e bem-estar</span>
-              </label>
-              <label class="chip">
-                <input type="checkbox" name="rec-subject" value="Saúde, alimentação e emagrecimento" />
-                <span>Saúde, alimentação e emagrecimento</span>
-              </label>
-              <label class="chip">
-                <input type="checkbox" name="rec-subject" value="Mulheres e questões femininas" />
-                <span>Mulheres e questões femininas</span>
-              </label>
-              <label class="chip">
-                <input type="checkbox" name="rec-subject" value="Beleza, moda e estética" />
-                <span>Beleza, moda e estética</span>
-              </label>
-              <label class="chip">
-                <input type="checkbox" name="rec-subject" value="Outro" />
-                <span>Outro</span>
-              </label>
-              <label class="chip">
-                <input type="checkbox" name="rec-subject" value="Não sei identificar" />
-                <span>Não sei identificar</span>
-              </label>
+            <legend>Você costuma encontrar conteúdos parecidos?</legend>
+            <div class="chip-group" id="rec-recurrence-group">
+              <label class="chip"><input type="radio" name="rec-recurrence" value="Foi a primeira vez" required /><span>Foi a primeira vez</span></label>
+              <label class="chip"><input type="radio" name="rec-recurrence" value="Já vi algumas vezes" /><span>Já vi algumas vezes</span></label>
+              <label class="chip"><input type="radio" name="rec-recurrence" value="Vejo com frequência" /><span>Vejo com frequência</span></label>
+              <label class="chip"><input type="radio" name="rec-recurrence" value="Não sei dizer" /><span>Não sei dizer</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>O que você gostaria de ver no lugar?</legend>
+            <p class="hint" id="rec-desired-hint">Escolha até 2 opções.</p>
+            <div class="chip-group" id="rec-desired-group">
+              <label class="chip"><input type="checkbox" name="rec-desired" value="Diversidade de corpos" /><span>Diversidade de corpos</span></label>
+              <label class="chip"><input type="checkbox" name="rec-desired" value="Saúde sem foco em emagrecimento" /><span>Saúde sem foco em emagrecimento</span></label>
+              <label class="chip"><input type="checkbox" name="rec-desired" value="Rotinas mais realistas" /><span>Rotinas mais realistas</span></label>
+              <label class="chip"><input type="checkbox" name="rec-desired" value="Conteúdo educativo" /><span>Conteúdo educativo</span></label>
+              <label class="chip"><input type="checkbox" name="rec-desired" value="Mais representatividade" /><span>Mais representatividade</span></label>
+              <label class="chip"><input type="checkbox" name="rec-desired" value="Conteúdo sem publicidade" /><span>Conteúdo sem publicidade</span></label>
+              <label class="chip"><input type="checkbox" name="rec-desired" value="Outro" /><span>Outro</span></label>
             </div>
           </fieldset>
 
           <label class="field">
-            <span>Por que você acha que isso foi recomendado a você?</span>
+            <span>Quer contar um pouco mais sobre por que você colocou esse conteúdo Fora do Feed? (opcional)</span>
             <textarea
-              id="rec-reason"
+              id="rec-comment"
               rows="3"
+              maxlength="500"
               placeholder="Escreva aqui..."
-              required
             ></textarea>
-          </label>
-
-          <fieldset class="field">
-            <legend>Como você se sentiu ao ver esse conteúdo?</legend>
-            <p class="hint">Pode marcar mais de uma opção.</p>
-            <div class="chip-group" id="rec-feelings-group">
-              <label class="chip"><input type="checkbox" name="rec-feeling" value="Identificada" /><span>Identificada</span></label>
-              <label class="chip"><input type="checkbox" name="rec-feeling" value="Motivada" /><span>Motivada</span></label>
-              <label class="chip"><input type="checkbox" name="rec-feeling" value="Inspirada" /><span>Inspirada</span></label>
-              <label class="chip"><input type="checkbox" name="rec-feeling" value="Informada" /><span>Informada</span></label>
-              <label class="chip"><input type="checkbox" name="rec-feeling" value="Indiferente" /><span>Indiferente</span></label>
-              <label class="chip"><input type="checkbox" name="rec-feeling" value="Incomodada" /><span>Incomodada</span></label>
-              <label class="chip"><input type="checkbox" name="rec-feeling" value="Pressionada" /><span>Pressionada</span></label>
-              <label class="chip"><input type="checkbox" name="rec-feeling" value="Comparada" /><span>Comparada</span></label>
-              <label class="chip"><input type="checkbox" name="rec-feeling" value="Insatisfeita com minha aparência" /><span>Insatisfeita com minha aparência</span></label>
-              <label class="chip"><input type="checkbox" name="rec-feeling" value="Positiva em relação ao meu corpo" /><span>Positiva em relação ao meu corpo</span></label>
-              <label class="chip"><input type="checkbox" name="rec-feeling" value="Outra" /><span>Outra</span></label>
-            </div>
-          </fieldset>
-
-          <label class="field" id="rec-feeling-other-field" hidden>
-            <span>Como se sentiu?</span>
-            <input type="text" id="rec-feeling-other" placeholder="Escreva como se sentiu" maxlength="120" />
           </label>
 
           <button type="submit" class="btn btn-primary">Enviar</button>
@@ -578,7 +514,7 @@
         </p>
 
         <button id="btn-new-submission" class="btn btn-primary">
-          Enviar nova recomendação
+          Registrar outro conteúdo
         </button>
 
         <button type="button" id="btn-logout" class="btn-back-link btn-logout">
@@ -596,10 +532,10 @@
       <div class="modal-box" role="alertdialog" aria-labelledby="submit-success-title">
         <button type="button" class="modal-close" id="btn-modal-close" aria-label="Fechar">×</button>
         <div class="modal-icon" aria-hidden="true">✓</div>
-        <h2 id="submit-success-title">Recomendação enviada!</h2>
+        <h2 id="submit-success-title">Conteúdo registrado!</h2>
         <p id="submit-success-message" class="lead"></p>
         <button id="btn-modal-new" class="btn btn-primary">
-          Enviar nova recomendação
+          Registrar outro conteúdo
         </button>
         <button id="btn-modal-status" class="btn btn-secondary">
           Ver meus envios

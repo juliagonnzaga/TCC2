@@ -129,7 +129,31 @@ function generateAnonymousCode(existingCodes) {
 }
 
 // Pedido da Julia: ampliar a lista de redes (antes só Instagram/TikTok/Outra).
-const VALID_NETWORKS = ["Instagram", "TikTok", "Facebook", "YouTube", "X", "Outra"];
+const NETWORK_HOSTS = [
+  ["instagram.com", "Instagram"],
+  ["tiktok.com", "TikTok"],
+  ["facebook.com", "Facebook"],
+  ["fb.com", "Facebook"],
+  ["fb.watch", "Facebook"],
+  ["youtube.com", "YouTube"],
+  ["youtu.be", "YouTube"],
+  ["twitter.com", "X"],
+  ["x.com", "X"],
+  ["t.co", "X"],
+  ["threads.net", "Threads"],
+  ["threads.com", "Threads"],
+  ["pinterest.com", "Pinterest"],
+  ["pin.it", "Pinterest"],
+  ["kwai.com", "Kwai"],
+  ["reddit.com", "Reddit"],
+  ["linkedin.com", "LinkedIn"],
+];
+
+function detectNetwork(link) {
+  const host = new URL(link).hostname.toLowerCase().replace(/^www\./, "");
+  const match = NETWORK_HOSTS.find(([domain]) => host === domain || host.endsWith(`.${domain}`));
+  return match ? { network: match[1] } : { network: "Outra", networkOther: host };
+}
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 6;
@@ -312,44 +336,47 @@ app.post("/api/participants/accept-tcle", requireParticipantAuth, (req, res) => 
 
 /* ===================== Sprint 2: Coleta de recomendações ===================== */
 
-/**
- * Pedido da Julia: ampliar a lista de redes (antes só Instagram/TikTok/
- * Outra) e dois campos novos preenchidos pela PARTICIPANTE — importante:
- * isso é a percepção dela, separado e sem competir com a categorização
- * da pesquisadora (taxonomia da Monografia I, ver TAXONOMY mais abaixo).
- * Dá pra comparar os dois depois (percepção da participante x
- * categorização treinada), mas nunca substituir um pelo outro.
- */
-const PARTICIPANT_SUBJECTS = [
-  "Corpo e aparência",
-  "Autoestima e bem-estar",
-  "Saúde, alimentação e emagrecimento",
-  "Mulheres e questões femininas",
-  "Beleza, moda e estética",
-  "Outro",
-  "Não sei identificar",
+const WHY_REASONS = [
+  "Incentiva dieta ou emagrecimento",
+  "Impõe um padrão de corpo ou beleza",
+  "Me faz comparar ou me sentir inadequada",
+  "É publicidade de produtos ou procedimentos estéticos",
+  "Mostra uma rotina ou vida idealizada",
+  "Sexualiza o corpo da mulher",
+  "Não tenho interesse nesse assunto",
+  "Outro motivo",
 ];
-const MAX_PARTICIPANT_SUBJECTS = 2;
+const RECURRENCE_OPTIONS = [
+  "Foi a primeira vez",
+  "Já vi algumas vezes",
+  "Vejo com frequência",
+  "Não sei dizer",
+];
+const FREQUENT_RECURRENCE = "Vejo com frequência";
+const DESIRED_CONTENT = [
+  "Diversidade de corpos",
+  "Saúde sem foco em emagrecimento",
+  "Rotinas mais realistas",
+  "Conteúdo educativo",
+  "Mais representatividade",
+  "Conteúdo sem publicidade",
+  "Outro",
+];
+const MAX_CHOICES = 2;
+const MAX_COMMENT_LENGTH = 500;
 
-const MIN_PARTICIPANT_AGE = 18;
-const MAX_PARTICIPANT_AGE = 120;
+const MIN_PARTICIPANTS_PER_GROUP = 3;
+const AGE_BANDS = [
+  "18 a 24 anos",
+  "25 a 34 anos",
+  "35 a 44 anos",
+  "45 a 54 anos",
+  "55 anos ou mais",
+];
 const CITIES_BY_STATE = JSON.parse(
   fs.readFileSync(path.join(__dirname, "public", "ibge", "cidades-por-estado.json"), "utf8")
 );
 
-const VALID_FEELINGS = [
-  "Identificada",
-  "Motivada",
-  "Inspirada",
-  "Informada",
-  "Indiferente",
-  "Incomodada",
-  "Pressionada",
-  "Comparada",
-  "Insatisfeita com minha aparência",
-  "Positiva em relação ao meu corpo",
-  "Outra",
-];
 
 function isValidUrl(value) {
   try {
@@ -369,71 +396,55 @@ function isValidUrl(value) {
  * Monografia 1 — decisão revista).
  */
 app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
-  // Pedido da Julia: "formato" e "data em que apareceu" saíram do
-  // formulário (e, com eles, dessa validação — ver histórico do arquivo
-  // se precisar recuperar como eram).
-  const { link, network, networkOther, reason, perceivedSubjects, feelings, feelingOther, age, state, city } = req.body || {};
+  const { link, whyReasons, recurrence, desiredContent, comment, ageBand, state, city } =
+    req.body || {};
 
-  if (!link || !network || !reason) {
-    return res.status(400).json({
-      error: "link, network e reason são obrigatórios.",
-    });
+  if (!link || typeof link !== "string") {
+    return res.status(400).json({ error: "O link do conteúdo é obrigatório." });
   }
   if (!isValidUrl(link)) {
     return res
       .status(400)
       .json({ error: "Cole um link válido (começando com http:// ou https://)." });
   }
-  if (!VALID_NETWORKS.includes(network)) {
-    return res.status(400).json({ error: "Rede social inválida." });
-  }
-  if (network === "Outra" && !String(networkOther || "").trim()) {
-    return res.status(400).json({ error: "Diga qual é a rede social, já que escolheu \"Outra\"." });
-  }
-  if (String(reason).trim().length < 3) {
-    return res
-      .status(400)
-      .json({ error: "Conte, em poucas palavras, por que acha que isso foi recomendado." });
-  }
-  // Percepção da PARTICIPANTE sobre o assunto do conteúdo — separada da
-  // categorização da pesquisadora (ver comentário em PARTICIPANT_SUBJECTS).
   if (
-    !Array.isArray(perceivedSubjects) ||
-    perceivedSubjects.length === 0 ||
-    perceivedSubjects.length > MAX_PARTICIPANT_SUBJECTS
+    !Array.isArray(whyReasons) ||
+    whyReasons.length === 0 ||
+    whyReasons.length > MAX_CHOICES ||
+    !whyReasons.every((v) => WHY_REASONS.includes(v))
+  ) {
+    return res.status(400).json({ error: `Escolha de 1 a ${MAX_CHOICES} motivos válidos.` });
+  }
+  if (!RECURRENCE_OPTIONS.includes(recurrence)) {
+    return res.status(400).json({ error: "Informe se costuma ver conteúdos parecidos." });
+  }
+  if (
+    !Array.isArray(desiredContent) ||
+    desiredContent.length === 0 ||
+    desiredContent.length > MAX_CHOICES ||
+    !desiredContent.every((v) => DESIRED_CONTENT.includes(v))
   ) {
     return res
       .status(400)
-      .json({ error: `Escolha de 1 a ${MAX_PARTICIPANT_SUBJECTS} assuntos.` });
+      .json({ error: `Escolha de 1 a ${MAX_CHOICES} opções do que gostaria de ver.` });
   }
-  if (!perceivedSubjects.every((s) => PARTICIPANT_SUBJECTS.includes(s))) {
-    return res.status(400).json({ error: "Assunto inválido." });
-  }
-  const feelingsList = Array.isArray(feelings) ? feelings : [];
-  if (!feelingsList.every((f) => VALID_FEELINGS.includes(f))) {
-    return res.status(400).json({ error: "Sentimento inválido." });
-  }
-  if (feelingsList.includes("Outra") && !String(feelingOther || "").trim()) {
-    return res.status(400).json({ error: "Escreva como se sentiu, já que escolheu \"Outra\"." });
-  }
-
-  const hasAge = age !== undefined && age !== null && age !== "";
-  const ageNumber = hasAge ? Number(age) : undefined;
-  if (
-    hasAge &&
-    (!Number.isInteger(ageNumber) ||
-      ageNumber < MIN_PARTICIPANT_AGE ||
-      ageNumber > MAX_PARTICIPANT_AGE)
-  ) {
-    return res.status(400).json({ error: "Idade inválida." });
+  if (!AGE_BANDS.includes(ageBand)) {
+    return res.status(400).json({ error: "Faixa de idade inválida." });
   }
   const stateKnown = Object.prototype.hasOwnProperty.call(CITIES_BY_STATE, state);
-  if (state !== undefined && !stateKnown) {
+  if (!stateKnown) {
     return res.status(400).json({ error: "Estado inválido." });
   }
-  if (city !== undefined && !(stateKnown && CITIES_BY_STATE[state].includes(city))) {
+  if (!CITIES_BY_STATE[state].includes(city)) {
     return res.status(400).json({ error: "Cidade inválida para o estado escolhido." });
   }
+  const commentText = typeof comment === "string" ? comment.trim() : "";
+  if (commentText.length > MAX_COMMENT_LENGTH) {
+    return res
+      .status(400)
+      .json({ error: `O comentário pode ter até ${MAX_COMMENT_LENGTH} caracteres.` });
+  }
+  const detected = detectNetwork(link);
 
   const participants = readJSON(PARTICIPANTS_FILE);
   const participant = participants.find((p) => p.id === req.participantId);
@@ -454,20 +465,17 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
   const record = {
     id: crypto.randomUUID(),
     participantId: participant.id,
-    // Código interno (não é mais mostrado à participante, ver Sprint 5
-    // no topo do arquivo) — é o que o painel da pesquisadora exibe, pra
-    // avaliadora nunca ver o e-mail de quem enviou.
     code: participant.code,
-    age: ageNumber,
+    ageBand,
     state,
     city,
     link,
-    network,
-    networkOther: network === "Outra" ? String(networkOther).trim() : undefined,
-    reason,
-    perceivedSubjects,
-    feelings: feelingsList,
-    feelingOther: feelingsList.includes("Outra") ? String(feelingOther).trim() : undefined,
+    network: detected.network,
+    networkOther: detected.networkOther,
+    whyReasons,
+    recurrence,
+    desiredContent,
+    comment: commentText || undefined,
     status: "recebido",
     submittedAt: new Date().toISOString(),
   };
@@ -932,10 +940,61 @@ app.get("/api/public/report", (req, res) => {
   };
 
   const categorias = countArrayField(categorizations, "categories", categorizations.length);
-  // Percepção da participante (ver PARTICIPANT_SUBJECTS/VALID_FEELINGS):
-  // vem do próprio envio, não da categorização da pesquisadora.
-  const assuntoPercebido = countArrayField(recommendations, "perceivedSubjects", recommendations.length);
-  const comoSeSentiu = countArrayField(recommendations, "feelings", recommendations.length);
+  const registros = recommendations.filter((r) => Array.isArray(r.whyReasons));
+  const percentOf = (count, total) => (total ? Math.round((count / total) * 1000) / 10 : 0);
+
+  const recurrenceBreakdown = (list) =>
+    RECURRENCE_OPTIONS.map((label) => {
+      const count = list.filter((r) => r.recurrence === label).length;
+      return { label, count, percent: percentOf(count, list.length) };
+    });
+
+  const summarize = (list) => ({
+    total: list.length,
+    participantes: new Set(list.map((r) => r.participantId)).size,
+    motivos: countArrayField(list, "whyReasons", list.length),
+    recorrencia: recurrenceBreakdown(list),
+    desejados: countArrayField(list, "desiredContent", list.length),
+    porRede: countBy(list, "network"),
+    faixasEtarias: AGE_BANDS.map((label) => {
+      const count = list.filter((r) => r.ageBand === label).length;
+      return { label, count, percent: percentOf(count, list.length) };
+    }),
+  });
+
+  const withPrivacyGate = (list) => {
+    const summary = summarize(list);
+    if (summary.participantes < MIN_PARTICIPANTS_PER_GROUP) return { liberado: false };
+    return { liberado: true, ...summary };
+  };
+
+  const porEstado = {};
+  const porFaixa = {};
+  for (const r of registros) {
+    (porEstado[r.state] = porEstado[r.state] || []).push(r);
+  }
+  for (const uf of Object.keys(porEstado)) {
+    const state = withPrivacyGate(porEstado[uf]);
+    if (state.liberado) {
+      const top = [...state.faixasEtarias].sort((x, y) => y.count - x.count)[0];
+      state.faixaPredominante = top && top.count > 0 ? top.label : null;
+    }
+    porEstado[uf] = state;
+  }
+  for (const label of AGE_BANDS) {
+    const list = registros.filter((r) => r.ageBand === label);
+    if (list.length > 0) porFaixa[label] = withPrivacyGate(list);
+  }
+
+  const recorrenciaPorMotivo = WHY_REASONS.map((label) => {
+    const group = registros.filter((r) => r.whyReasons.includes(label));
+    const frequentes = group.filter((r) => r.recurrence === FREQUENT_RECURRENCE).length;
+    return { label, total: group.length, count: frequentes, percent: percentOf(frequentes, group.length) };
+  })
+    .filter((item) => item.total > 0)
+    .sort((x, y) => y.percent - x.percent);
+
+  const overall = summarize(registros);
 
   const itemsCategorizados = recommendations.filter((r) => {
     const itemCategorizations = categorizations.filter((c) => c.recommendationId === r.id);
@@ -970,8 +1029,20 @@ app.get("/api/public/report", (req, res) => {
     tom: countBy(categorizations, "tone"),
     intencaoComercial: countBy(categorizations, "commercialIntent"),
     edicaoAparente: countBy(categorizations, "apparentEditing"),
-    assuntoPercebido,
-    comoSeSentiu,
+    registrosForaDoFeed: registros.length,
+    motivos: overall.motivos,
+    recorrencia: overall.recorrencia,
+    desejados: overall.desejados,
+    recorrenciaPorMotivo,
+    porFaixa,
+    porEstado,
+    faixas: AGE_BANDS,
+    minimoParticipantes: MIN_PARTICIPANTS_PER_GROUP,
+    opcoesMapa: {
+      motivos: WHY_REASONS,
+      desejados: DESIRED_CONTENT,
+      recorrencia: RECURRENCE_OPTIONS,
+    },
   });
 });
 

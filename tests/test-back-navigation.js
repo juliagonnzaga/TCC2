@@ -104,9 +104,15 @@ async function runFlow(browser) {
   await page.click("#btn-start");
   await page.waitForSelector("#screen-submit:not([hidden])");
   await page.fill("#rec-link", "https://www.instagram.com/reel/teste-voltar");
-  await page.click('label.chip:has(input[name="rec-network"][value="Instagram"])');
-  await page.click('label.chip:has(input[name="rec-subject"][value="Corpo e aparência"])');
-  await page.fill("#rec-reason", "teste do botão voltar");
+  await page.selectOption("#rec-age-band", "25 a 34 anos");
+  await page.selectOption("#rec-state", "MG");
+  await page.fill("#rec-city", "belo horizonte");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await page.click('label.chip:has(input[name="rec-why"][value="Incentiva dieta ou emagrecimento"])');
+  await page.click('label.chip:has(input[name="rec-recurrence"][value="Vejo com frequência"])');
+  await page.click('label.chip:has(input[name="rec-desired"][value="Diversidade de corpos"])');
+  await page.fill("#rec-comment", "teste do botão voltar");
   await page.click("#submit-form button[type=submit]");
   // Com o modal de confirmação de envio, vai pro status pelo botão do modal.
   await page.waitForSelector("#submit-success-modal:not([hidden])");

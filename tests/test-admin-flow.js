@@ -37,9 +37,13 @@ async function apiSetup() {
     "/api/recommendations",
     {
       link: "https://www.instagram.com/reel/paraadmin",
-      network: "Instagram",
-      reason: "Aparece muito treino puxado",
-      perceivedSubjects: ["Corpo e aparência"],
+      ageBand: "25 a 34 anos",
+      state: "MG",
+      city: "Belo Horizonte",
+      whyReasons: ["Incentiva dieta ou emagrecimento"],
+      recurrence: "Vejo com frequência",
+      desiredContent: ["Diversidade de corpos"],
+      comment: "Aparece muito treino puxado",
     },
     token
   );
