@@ -181,6 +181,62 @@ h1 {
   display: none;
 }
 
+.combo {
+  position: relative;
+}
+
+.combo-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 4px 0 0;
+  padding: 4px;
+  list-style: none;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(38, 34, 48, 0.12);
+}
+
+.combo-list[hidden] {
+  display: none;
+}
+
+.combo-option {
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.combo-option.active {
+  background: var(--color-primary);
+  color: white;
+}
+
+.combo-empty {
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 20px;
+}
+
+.field-row .field {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
 .field > span,
 fieldset.field legend {
   font-size: 13px;
@@ -192,6 +248,7 @@ select,
 input[type="url"],
 input[type="date"],
 input[type="text"],
+input[type="number"],
 textarea {
   padding: 10px 12px;
   border-radius: 8px;

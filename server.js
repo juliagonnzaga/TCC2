@@ -331,6 +331,12 @@ const PARTICIPANT_SUBJECTS = [
 ];
 const MAX_PARTICIPANT_SUBJECTS = 2;
 
+const MIN_PARTICIPANT_AGE = 18;
+const MAX_PARTICIPANT_AGE = 120;
+const CITIES_BY_STATE = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "public", "ibge", "cidades-por-estado.json"), "utf8")
+);
+
 const VALID_FEELINGS = [
   "Identificada",
   "Motivada",
@@ -366,7 +372,7 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
   // Pedido da Julia: "formato" e "data em que apareceu" saíram do
   // formulário (e, com eles, dessa validação — ver histórico do arquivo
   // se precisar recuperar como eram).
-  const { link, network, networkOther, reason, perceivedSubjects, feelings, feelingOther } = req.body || {};
+  const { link, network, networkOther, reason, perceivedSubjects, feelings, feelingOther, age, state, city } = req.body || {};
 
   if (!link || !network || !reason) {
     return res.status(400).json({
@@ -411,6 +417,24 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
     return res.status(400).json({ error: "Escreva como se sentiu, já que escolheu \"Outra\"." });
   }
 
+  const hasAge = age !== undefined && age !== null && age !== "";
+  const ageNumber = hasAge ? Number(age) : undefined;
+  if (
+    hasAge &&
+    (!Number.isInteger(ageNumber) ||
+      ageNumber < MIN_PARTICIPANT_AGE ||
+      ageNumber > MAX_PARTICIPANT_AGE)
+  ) {
+    return res.status(400).json({ error: "Idade inválida." });
+  }
+  const stateKnown = Object.prototype.hasOwnProperty.call(CITIES_BY_STATE, state);
+  if (state !== undefined && !stateKnown) {
+    return res.status(400).json({ error: "Estado inválido." });
+  }
+  if (city !== undefined && !(stateKnown && CITIES_BY_STATE[state].includes(city))) {
+    return res.status(400).json({ error: "Cidade inválida para o estado escolhido." });
+  }
+
   const participants = readJSON(PARTICIPANTS_FILE);
   const participant = participants.find((p) => p.id === req.participantId);
   if (!participant) {
@@ -434,6 +458,9 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
     // no topo do arquivo) — é o que o painel da pesquisadora exibe, pra
     // avaliadora nunca ver o e-mail de quem enviou.
     code: participant.code,
+    age: ageNumber,
+    state,
+    city,
     link,
     network,
     networkOther: network === "Outra" ? String(networkOther).trim() : undefined,

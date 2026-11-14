@@ -362,6 +362,148 @@ const networkOtherConfirmed = document.getElementById("rec-network-other-confirm
 const btnConfirmNetworkOther = document.getElementById("btn-confirm-network-other");
 const feelingOtherField = document.getElementById("rec-feeling-other-field");
 const feelingOtherInput = document.getElementById("rec-feeling-other");
+const ageInput = document.getElementById("rec-age");
+const stateSelect = document.getElementById("rec-state");
+const cityInput = document.getElementById("rec-city");
+const cityList = document.getElementById("rec-city-list");
+
+let availableCities = [];
+let activeCityIndex = -1;
+
+let citiesByStateRequest = null;
+
+function loadCitiesByState() {
+  if (!citiesByStateRequest) {
+    citiesByStateRequest = fetch("/ibge/cidades-por-estado.json").then((res) => {
+      if (!res.ok) throw new Error("Falha ao carregar as cidades.");
+      return res.json();
+    });
+    citiesByStateRequest.catch(() => {
+      citiesByStateRequest = null;
+    });
+  }
+  return citiesByStateRequest;
+}
+
+function normalizeText(text) {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function resolveCity(text) {
+  const key = normalizeText(text);
+  if (!key) return "";
+  return availableCities.find((name) => normalizeText(name) === key) || "";
+}
+
+function closeCityList() {
+  cityList.hidden = true;
+  cityInput.setAttribute("aria-expanded", "false");
+  activeCityIndex = -1;
+}
+
+function setActiveCity(index) {
+  const options = cityList.querySelectorAll(".combo-option");
+  if (options.length === 0) return;
+  activeCityIndex = (index + options.length) % options.length;
+  options.forEach((el, i) => el.classList.toggle("active", i === activeCityIndex));
+  options[activeCityIndex].scrollIntoView({ block: "nearest" });
+}
+
+function chooseCity(name) {
+  cityInput.value = name;
+  closeCityList();
+}
+
+function renderCityList() {
+  const key = normalizeText(cityInput.value);
+  const starts = [];
+  const contains = [];
+  availableCities.forEach((name) => {
+    const normalized = normalizeText(name);
+    if (!key || normalized.startsWith(key)) starts.push(name);
+    else if (normalized.includes(key)) contains.push(name);
+  });
+  const matches = starts.concat(contains);
+
+  cityList.innerHTML = "";
+  activeCityIndex = -1;
+  if (matches.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "combo-empty";
+    empty.textContent = "Nenhuma cidade encontrada";
+    cityList.appendChild(empty);
+  } else {
+    matches.forEach((name) => {
+      const option = document.createElement("li");
+      option.className = "combo-option";
+      option.setAttribute("role", "option");
+      option.textContent = name;
+      option.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        chooseCity(name);
+      });
+      cityList.appendChild(option);
+    });
+  }
+  cityList.hidden = false;
+  cityInput.setAttribute("aria-expanded", "true");
+}
+
+cityInput.addEventListener("focus", () => {
+  if (!cityInput.disabled) renderCityList();
+});
+
+cityInput.addEventListener("input", renderCityList);
+
+cityInput.addEventListener("keydown", (event) => {
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    if (cityList.hidden) renderCityList();
+    setActiveCity(activeCityIndex + 1);
+  } else if (event.key === "ArrowUp") {
+    event.preventDefault();
+    if (cityList.hidden) renderCityList();
+    setActiveCity(activeCityIndex - 1);
+  } else if (event.key === "Enter" && !cityList.hidden) {
+    event.preventDefault();
+    const options = cityList.querySelectorAll(".combo-option");
+    if (activeCityIndex >= 0) chooseCity(options[activeCityIndex].textContent);
+    else if (options.length === 1) chooseCity(options[0].textContent);
+  } else if (event.key === "Escape") {
+    closeCityList();
+  }
+});
+
+cityInput.addEventListener("blur", () => {
+  closeCityList();
+  cityInput.value = resolveCity(cityInput.value);
+});
+
+async function fillCities(uf, selectedCity) {
+  availableCities = [];
+  cityInput.value = "";
+  cityInput.disabled = true;
+  closeCityList();
+  if (!uf) {
+    cityInput.placeholder = "Selecione o estado primeiro";
+    return;
+  }
+  cityInput.placeholder = "Carregando cidades...";
+  try {
+    const citiesByState = await loadCitiesByState();
+    if (stateSelect.value !== uf) return;
+    availableCities = citiesByState[uf] || [];
+    cityInput.placeholder = "Digite o nome da cidade";
+    cityInput.disabled = false;
+    if (selectedCity) cityInput.value = selectedCity;
+  } catch (err) {
+    cityInput.placeholder = "Não foi possível carregar as cidades";
+  }
+}
 
 submitForm.addEventListener("change", (event) => {
   if (event.target.name === "rec-network") {
@@ -370,6 +512,7 @@ submitForm.addEventListener("change", (event) => {
     networkOtherConfirmed.hidden = true;
     if (!isOther) networkOtherInput.value = "";
   }
+  if (event.target.id === "rec-state") fillCities(event.target.value);
   if (event.target.name === "rec-subject") enforceMaxTwoSubjects();
   if (event.target.name === "rec-feeling" && event.target.value === "Outra") {
     feelingOtherField.hidden = !event.target.checked;
@@ -418,6 +561,9 @@ submitForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   hideError("submit-error");
 
+  const age = Number(ageInput.value);
+  const state = stateSelect.value;
+  const city = resolveCity(cityInput.value);
   const link = document.getElementById("rec-link").value.trim();
   const networkInput = submitForm.querySelector('input[name="rec-network"]:checked');
   const networkOther = networkOtherInput.value.trim();
@@ -430,6 +576,14 @@ submitForm.addEventListener("submit", async (event) => {
   ).map((el) => el.value);
   const feelingOther = feelingOtherInput.value.trim();
 
+  if (!Number.isInteger(age) || age < 18 || age > 120) {
+    showError("submit-error", "Informe uma idade válida (a partir de 18 anos).");
+    return;
+  }
+  if (!state || !city) {
+    showError("submit-error", "Escolha o estado e a cidade onde você mora.");
+    return;
+  }
   if (!link || !networkInput || !reason) {
     showError("submit-error", "Preencha todos os campos antes de enviar.");
     return;
@@ -464,6 +618,9 @@ submitForm.addEventListener("submit", async (event) => {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({
+        age,
+        state,
+        city,
         link,
         network: networkInput.value,
         networkOther: networkInput.value === "Outra" ? networkOther : undefined,
@@ -483,6 +640,9 @@ submitForm.addEventListener("submit", async (event) => {
     if (!res.ok) throw new Error(data.error || "Falha ao enviar a recomendação.");
 
     submitForm.reset();
+    ageInput.value = age;
+    stateSelect.value = state;
+    await fillCities(state, city);
     networkOtherField.hidden = true;
     networkOtherConfirmed.hidden = true;
     feelingOtherField.hidden = true;
