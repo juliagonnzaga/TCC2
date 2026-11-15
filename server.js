@@ -364,6 +364,9 @@ const DESIRED_CONTENT = [
 ];
 const MAX_CHOICES = 2;
 const MAX_COMMENT_LENGTH = 500;
+const MAX_OTHER_LENGTH = 120;
+const OTHER_REASON = "Outro motivo";
+const OTHER_DESIRED = "Outro";
 
 const MIN_PARTICIPANTS_PER_GROUP = 3;
 const AGE_BANDS = [
@@ -396,8 +399,18 @@ function isValidUrl(value) {
  * Monografia 1 — decisão revista).
  */
 app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
-  const { link, whyReasons, recurrence, desiredContent, comment, ageBand, state, city } =
-    req.body || {};
+  const {
+    link,
+    whyReasons,
+    whyOther,
+    recurrence,
+    desiredContent,
+    desiredOther,
+    comment,
+    ageBand,
+    state,
+    city,
+  } = req.body || {};
 
   if (!link || typeof link !== "string") {
     return res.status(400).json({ error: "O link do conteúdo é obrigatório." });
@@ -444,6 +457,24 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
       .status(400)
       .json({ error: `O comentário pode ter até ${MAX_COMMENT_LENGTH} caracteres.` });
   }
+  const whyOtherText = typeof whyOther === "string" ? whyOther.trim() : "";
+  if (
+    whyReasons.includes(OTHER_REASON) &&
+    (!whyOtherText || whyOtherText.length > MAX_OTHER_LENGTH)
+  ) {
+    return res
+      .status(400)
+      .json({ error: `Escreva qual é o outro motivo (até ${MAX_OTHER_LENGTH} caracteres).` });
+  }
+  const desiredOtherText = typeof desiredOther === "string" ? desiredOther.trim() : "";
+  if (
+    desiredContent.includes(OTHER_DESIRED) &&
+    (!desiredOtherText || desiredOtherText.length > MAX_OTHER_LENGTH)
+  ) {
+    return res.status(400).json({
+      error: `Escreva o que gostaria de ver (até ${MAX_OTHER_LENGTH} caracteres).`,
+    });
+  }
   const detected = detectNetwork(link);
 
   const participants = readJSON(PARTICIPANTS_FILE);
@@ -473,8 +504,10 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
     network: detected.network,
     networkOther: detected.networkOther,
     whyReasons,
+    whyOther: whyReasons.includes(OTHER_REASON) ? whyOtherText : undefined,
     recurrence,
     desiredContent,
+    desiredOther: desiredContent.includes(OTHER_DESIRED) ? desiredOtherText : undefined,
     comment: commentText || undefined,
     status: "recebido",
     submittedAt: new Date().toISOString(),

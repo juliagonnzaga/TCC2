@@ -1070,12 +1070,6 @@ textarea {
   margin: 18px 0 10px;
 }
 
-.report-analysis {
-  margin-top: 34px;
-  padding-top: 18px;
-  border-top: 1px solid var(--color-border);
-}
-
 .matrix-wrap {
   overflow-x: auto;
 }

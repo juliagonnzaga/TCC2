@@ -474,6 +474,34 @@ async function call(method, path, body, token) {
     "rede desconhecida vira \"Outra\" com o domínio, e motivos, desejos, comentário e local são salvos"
   );
 
+  ok((await send({ whyReasons: ["Outro motivo"] })).status === 400, "\"Outro motivo\" sem texto é rejeitado");
+  ok(
+    (await send({ whyReasons: ["Outro motivo"], whyOther: "x".repeat(121) })).status === 400,
+    "texto de \"Outro motivo\" acima de 120 caracteres é rejeitado"
+  );
+  ok((await send({ desiredContent: ["Outro"] })).status === 400, "\"Outro\" em o que gostaria de ver, sem texto, é rejeitado");
+
+  const comOutros = await send({
+    whyReasons: ["Outro motivo"],
+    whyOther: "  Me deixa ansiosa  ",
+    desiredContent: ["Outro", "Conteúdo educativo"],
+    desiredOther: "Mais humor leve",
+  });
+  ok(
+    comOutros.status === 201 &&
+      comOutros.data.recommendation.whyOther === "Me deixa ansiosa" &&
+      comOutros.data.recommendation.desiredOther === "Mais humor leve",
+    "textos de \"Outro motivo\" e \"Outro\" são salvos (sem espaços nas pontas)"
+  );
+
+  const semOutros = await send({ whyOther: "ignorado", desiredOther: "ignorado" });
+  ok(
+    semOutros.status === 201 &&
+      semOutros.data.recommendation.whyOther === undefined &&
+      semOutros.data.recommendation.desiredOther === undefined,
+    "texto de \"outro\" é descartado quando a opção não foi marcada"
+  );
+
   // -------- Sem limite de envios (pedido da Julia, nov/2026) --------
   // Antes havia um teto de 3 recomendações por participante (Seção 3.3.1
   // da Monografia 1); a Julia decidiu remover esse limite. Usa uma

@@ -257,7 +257,11 @@ function enforceMaxTwoCategories() {
 
 function participantReasonText(item) {
   if (!Array.isArray(item.whyReasons)) return item.reason || "";
-  const reasons = item.whyReasons.join("; ");
+  const reasons = item.whyReasons
+    .map((reason) =>
+      reason === "Outro motivo" && item.whyOther ? `Outro motivo: ${item.whyOther}` : reason
+    )
+    .join("; ");
   return item.comment ? `${reasons} — "${item.comment}"` : reasons;
 }
 

@@ -356,6 +356,12 @@ const submitForm = document.getElementById("submit-form");
 const ageBandSelect = document.getElementById("rec-age-band");
 const linkInput = document.getElementById("rec-link");
 const networkDetected = document.getElementById("rec-network-detected");
+const whyOtherField = document.getElementById("rec-why-other-field");
+const whyOtherInput = document.getElementById("rec-why-other");
+const desiredOtherField = document.getElementById("rec-desired-other-field");
+const desiredOtherInput = document.getElementById("rec-desired-other");
+const OTHER_REASON = "Outro motivo";
+const OTHER_DESIRED = "Outro";
 const stateSelect = document.getElementById("rec-state");
 const cityInput = document.getElementById("rec-city");
 const cityList = document.getElementById("rec-city-list");
@@ -547,6 +553,12 @@ function enforceMaxChoices(name, hintId) {
     : "Escolha até 2 opções.";
 }
 
+function toggleOtherField(name, otherValue, field, input) {
+  const show = checkedValues(name).includes(otherValue);
+  field.hidden = !show;
+  if (!show) input.value = "";
+}
+
 linkInput.addEventListener("input", () => {
   const name = linkInput.value.trim() ? detectNetworkName(linkInput.value.trim()) : "";
   networkDetected.hidden = !name;
@@ -555,8 +567,14 @@ linkInput.addEventListener("input", () => {
 
 submitForm.addEventListener("change", (event) => {
   if (event.target.id === "rec-state") fillCities(event.target.value);
-  if (event.target.name === "rec-why") enforceMaxChoices("rec-why", "rec-why-hint");
-  if (event.target.name === "rec-desired") enforceMaxChoices("rec-desired", "rec-desired-hint");
+  if (event.target.name === "rec-why") {
+    enforceMaxChoices("rec-why", "rec-why-hint");
+    toggleOtherField("rec-why", OTHER_REASON, whyOtherField, whyOtherInput);
+  }
+  if (event.target.name === "rec-desired") {
+    enforceMaxChoices("rec-desired", "rec-desired-hint");
+    toggleOtherField("rec-desired", OTHER_DESIRED, desiredOtherField, desiredOtherInput);
+  }
 });
 
 submitForm.addEventListener("submit", async (event) => {
@@ -570,6 +588,8 @@ submitForm.addEventListener("submit", async (event) => {
   const whyReasons = checkedValues("rec-why");
   const recurrenceInput = submitForm.querySelector('input[name="rec-recurrence"]:checked');
   const desiredContent = checkedValues("rec-desired");
+  const whyOther = whyOtherInput.value.trim();
+  const desiredOther = desiredOtherInput.value.trim();
   const comment = document.getElementById("rec-comment").value.trim();
 
   if (!ageBand) {
@@ -588,12 +608,20 @@ submitForm.addEventListener("submit", async (event) => {
     showError("submit-error", "Escolha pelo menos 1 motivo para não querer continuar vendo o conteúdo.");
     return;
   }
+  if (whyReasons.includes(OTHER_REASON) && !whyOther) {
+    showError("submit-error", "Escreva qual é o outro motivo.");
+    return;
+  }
   if (!recurrenceInput) {
     showError("submit-error", "Diga se você costuma encontrar conteúdos parecidos.");
     return;
   }
   if (desiredContent.length === 0) {
     showError("submit-error", "Escolha pelo menos 1 opção do que gostaria de ver no lugar.");
+    return;
+  }
+  if (desiredContent.includes(OTHER_DESIRED) && !desiredOther) {
+    showError("submit-error", "Escreva o que você gostaria de ver no lugar.");
     return;
   }
   if (!state.token) {
@@ -615,8 +643,10 @@ submitForm.addEventListener("submit", async (event) => {
         city,
         link,
         whyReasons,
+        whyOther: whyReasons.includes(OTHER_REASON) ? whyOther : undefined,
         recurrence: recurrenceInput.value,
         desiredContent,
+        desiredOther: desiredContent.includes(OTHER_DESIRED) ? desiredOther : undefined,
         comment: comment || undefined,
       }),
     });
@@ -636,6 +666,8 @@ submitForm.addEventListener("submit", async (event) => {
     networkDetected.hidden = true;
     enforceMaxChoices("rec-why", "rec-why-hint");
     enforceMaxChoices("rec-desired", "rec-desired-hint");
+    toggleOtherField("rec-why", OTHER_REASON, whyOtherField, whyOtherInput);
+    toggleOtherField("rec-desired", OTHER_DESIRED, desiredOtherField, desiredOtherInput);
     showSubmitSuccessModal(data.totalForParticipant);
   } catch (err) {
     showError("submit-error", err.message);

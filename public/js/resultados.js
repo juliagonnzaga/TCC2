@@ -110,6 +110,11 @@ async function loadReport() {
     const res = await fetch("/api/public/report");
     if (!res.ok) throw new Error("Não foi possível carregar o relatório.");
     const data = await res.json();
+    if (!Array.isArray(data.motivos) || !data.opcoesMapa) {
+      throw new Error(
+        "O servidor está com uma versão antiga. Feche o terminal do servidor e rode node server.js de novo."
+      );
+    }
 
     document.getElementById("stat-items-coletados").textContent = data.itemsColetados;
     document.getElementById("stat-items-categorizados").textContent = data.itemsCategorizados;
@@ -117,9 +122,6 @@ async function loadReport() {
       data.percentConcordancia === null ? "—" : `${data.percentConcordancia}%`;
 
     renderBars("bars-rede", data.porRede, { emptyMessage: "Ainda não há envios." });
-    renderBars("bars-categorias", data.categorias, {
-      emptyMessage: "Ainda não há categorizações registradas.",
-    });
     renderBars("bars-motivos", data.motivos, { emptyMessage: "Ainda não há registros." });
     renderBars(
       "bars-recorrencia-motivo",
@@ -130,22 +132,10 @@ async function loadReport() {
     renderBars("bars-desejados", data.desejados, { emptyMessage: "Ainda não há registros." });
     document.getElementById("matrix-min-participants").textContent = data.minimoParticipantes;
     renderAgeMatrix(data);
-    renderBars("bars-tom", data.tom, { emptyMessage: "Ainda não há categorizações registradas." });
-    renderBars("bars-intencao", data.intencaoComercial, {
-      emptyMessage: "Ainda não há categorizações registradas.",
-    });
-    renderBars("bars-edicao", data.edicaoAparente, {
-      emptyMessage: "Ainda não há categorizações registradas.",
-    });
 
     renderBrazilMap(data).catch(() => {
       document.getElementById("map-error").hidden = false;
     });
-
-    const categoriasHint = document.getElementById("categorias-hint");
-    categoriasHint.textContent = data.totalCategorizacoes
-      ? `Baseado em ${data.totalCategorizacoes} categorizações registradas (cada item pode ter até 2, uma por avaliadora).`
-      : "";
 
     const footer = document.getElementById("report-footer-note");
     const geradoEm = new Date(data.geradoEm);
