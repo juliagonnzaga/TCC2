@@ -889,7 +889,7 @@ textarea {
 
 .bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  background: var(--color-primary);
   border-radius: 6px;
 }
 
@@ -898,6 +898,58 @@ textarea {
   font-size: 12.5px;
   white-space: nowrap;
   text-align: right;
+}
+
+.col-chart {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.col-item {
+  flex: 1 0 84px;
+  min-width: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+
+.col-value {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.col-plot {
+  width: 100%;
+  height: 180px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.col-bar {
+  width: 70%;
+  max-width: 56px;
+  background: var(--color-primary);
+  border-radius: 6px 6px 0 0;
+}
+
+.col-count {
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.col-label {
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--color-text);
 }
 
 .report-empty {

@@ -39,6 +39,59 @@ function renderBars(containerId, items, { emptyMessage, totalForPercent } = {}) 
   }
 }
 
+function renderColumns(containerId, items, { emptyMessage } = {}) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  if (!items || items.length === 0) {
+    const p = document.createElement("p");
+    p.className = "report-empty";
+    p.textContent = emptyMessage || "Ainda não há dados suficientes.";
+    container.appendChild(p);
+    return;
+  }
+
+  const maxPercent = Math.max(...items.map((item) => item.percent), 1);
+
+  const chart = document.createElement("div");
+  chart.className = "col-chart";
+  chart.setAttribute("role", "list");
+
+  for (const item of items) {
+    const col = document.createElement("div");
+    col.className = "col-item";
+    col.setAttribute("role", "listitem");
+    col.title = `${item.label}: ${item.count} (${item.percent}%)`;
+
+    const value = document.createElement("span");
+    value.className = "col-value";
+    value.textContent = `${item.percent}%`;
+
+    const plot = document.createElement("div");
+    plot.className = "col-plot";
+    const bar = document.createElement("div");
+    bar.className = "col-bar";
+    bar.style.height = `${Math.max((item.percent / maxPercent) * 100, item.count > 0 ? 3 : 0)}%`;
+    plot.appendChild(bar);
+
+    const count = document.createElement("span");
+    count.className = "col-count";
+    count.textContent = `${item.count} ${item.count === 1 ? "registro" : "registros"}`;
+
+    const label = document.createElement("span");
+    label.className = "col-label";
+    label.textContent = item.label;
+
+    col.appendChild(value);
+    col.appendChild(plot);
+    col.appendChild(count);
+    col.appendChild(label);
+    chart.appendChild(col);
+  }
+
+  container.appendChild(chart);
+}
+
 function renderAgeMatrix(data) {
   const container = document.getElementById("age-matrix");
   const select = document.getElementById("matrix-metric");
@@ -129,15 +182,15 @@ async function loadReport() {
     }
     document.getElementById("stat-estados").textContent = data.estadosComRegistros;
 
-    renderBars("bars-rede", data.porRede, { emptyMessage: "Ainda não há envios." });
-    renderBars("bars-motivos", data.motivos, { emptyMessage: "Ainda não há registros." });
-    renderBars(
+    renderColumns("bars-rede", data.porRede, { emptyMessage: "Ainda não há envios." });
+    renderColumns("bars-motivos", data.motivos, { emptyMessage: "Ainda não há registros." });
+    renderColumns(
       "bars-recorrencia-motivo",
       data.recorrenciaPorMotivo.map((item) => ({ ...item, label: `${item.label} (n=${item.total})` })),
       { emptyMessage: "Ainda não há registros." }
     );
-    renderBars("bars-recorrencia", data.recorrencia, { emptyMessage: "Ainda não há registros." });
-    renderBars("bars-desejados", data.desejados, { emptyMessage: "Ainda não há registros." });
+    renderColumns("bars-recorrencia", data.recorrencia, { emptyMessage: "Ainda não há registros." });
+    renderColumns("bars-desejados", data.desejados, { emptyMessage: "Ainda não há registros." });
     document.getElementById("matrix-min-participants").textContent = data.minimoParticipantes;
     renderAgeMatrix(data);
     setupCsvDownload(data);
