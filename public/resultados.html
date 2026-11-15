@@ -19,7 +19,18 @@
   <main class="app-shell">
     <div class="card card-wide card-results">
       <section id="screen-public-report">
-        <p class="eyebrow">Fora do Feed · Dados abertos</p>
+        <div class="report-topbar">
+          <p class="eyebrow">Fora do Feed · Dados abertos</p>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="btn-download-csv"
+            title="Os mesmos números desta página, agregados e anônimos"
+            hidden
+          >
+            Baixar dados (CSV)
+          </button>
+        </div>
         <h1>O que as mulheres estão colocando Fora do Feed?</h1>
         <p class="lead">
           Viu algo que não queria ver? Registre. O Fora do Feed reúne
@@ -41,12 +52,16 @@
               <div class="stat-label">registros</div>
             </div>
             <div class="report-stat">
-              <div class="stat-value" id="stat-items-categorizados">—</div>
-              <div class="stat-label">já categorizados</div>
+              <div class="stat-value" id="stat-faixa">—</div>
+              <div class="stat-label" id="stat-faixa-label">faixa etária mais comum</div>
             </div>
             <div class="report-stat">
-              <div class="stat-value" id="stat-percent-concordancia">—</div>
-              <div class="stat-label">concordância entre avaliadoras</div>
+              <div class="stat-value stat-value-text" id="stat-motivo">—</div>
+              <div class="stat-label" id="stat-motivo-label">motivo mais apontado</div>
+            </div>
+            <div class="report-stat">
+              <div class="stat-value" id="stat-estados">—</div>
+              <div class="stat-label">estados com registros</div>
             </div>
           </div>
 
@@ -183,6 +198,7 @@
   </main>
 
   <script src="js/mapa-brasil.js"></script>
+  <script src="js/exportar-csv.js"></script>
   <script src="js/resultados.js"></script>
 </body>
 </html>

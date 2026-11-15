@@ -110,16 +110,24 @@ async function loadReport() {
     const res = await fetch("/api/public/report");
     if (!res.ok) throw new Error("Não foi possível carregar o relatório.");
     const data = await res.json();
-    if (!Array.isArray(data.motivos) || !data.opcoesMapa) {
+    if (!Array.isArray(data.motivos) || !data.opcoesMapa || !("atualizadoEm" in data) || !("faixaPredominante" in data)) {
       throw new Error(
         "O servidor está com uma versão antiga. Feche o terminal do servidor e rode node server.js de novo."
       );
     }
 
     document.getElementById("stat-items-coletados").textContent = data.itemsColetados;
-    document.getElementById("stat-items-categorizados").textContent = data.itemsCategorizados;
-    document.getElementById("stat-percent-concordancia").textContent =
-      data.percentConcordancia === null ? "—" : `${data.percentConcordancia}%`;
+    if (data.faixaPredominante) {
+      document.getElementById("stat-faixa").textContent = shortBand(data.faixaPredominante.label);
+      document.getElementById("stat-faixa-label").textContent =
+        `faixa etária mais comum (${data.faixaPredominante.percent}%)`;
+    }
+    if (data.motivos.length > 0) {
+      document.getElementById("stat-motivo").textContent = data.motivos[0].label;
+      document.getElementById("stat-motivo-label").textContent =
+        `motivo mais apontado (${data.motivos[0].percent}%)`;
+    }
+    document.getElementById("stat-estados").textContent = data.estadosComRegistros;
 
     renderBars("bars-rede", data.porRede, { emptyMessage: "Ainda não há envios." });
     renderBars("bars-motivos", data.motivos, { emptyMessage: "Ainda não há registros." });
@@ -132,14 +140,18 @@ async function loadReport() {
     renderBars("bars-desejados", data.desejados, { emptyMessage: "Ainda não há registros." });
     document.getElementById("matrix-min-participants").textContent = data.minimoParticipantes;
     renderAgeMatrix(data);
+    setupCsvDownload(data);
 
     renderBrazilMap(data).catch(() => {
       document.getElementById("map-error").hidden = false;
     });
 
     const footer = document.getElementById("report-footer-note");
-    const geradoEm = new Date(data.geradoEm);
-    footer.textContent = `Dados gerados em ${geradoEm.toLocaleString("pt-BR")}. Relatório agregado e anônimo — nenhum link, participante ou item individual é exibido.`;
+    const atualizadoEm = data.atualizadoEm ? new Date(data.atualizadoEm) : null;
+    const quando = atualizadoEm
+      ? `Dados atualizados em ${atualizadoEm.toLocaleDateString("pt-BR")} às ${atualizadoEm.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}, no envio mais recente.`
+      : "Ainda não há envios registrados.";
+    footer.textContent = `${quando} Relatório agregado e anônimo, nenhum link, participante ou item individual é exibido. O formulário é anônimo e nenhum dado exibido aqui identifica quem participou.`;
 
     loading.hidden = true;
     content.hidden = false;

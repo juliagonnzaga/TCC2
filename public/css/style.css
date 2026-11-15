@@ -1110,3 +1110,30 @@ textarea {
   color: var(--color-text-muted);
 }
 
+.report-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.report-topbar .eyebrow {
+  margin: 0;
+}
+
+.report-topbar .btn {
+  width: auto;
+  flex-shrink: 0;
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.report-stats {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.report-stat .stat-value.stat-value-text {
+  font-size: 15px;
+  line-height: 1.3;
+}

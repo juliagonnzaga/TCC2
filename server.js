@@ -1028,6 +1028,9 @@ app.get("/api/public/report", (req, res) => {
     .sort((x, y) => y.percent - x.percent);
 
   const overall = summarize(registros);
+  const topBand = [...overall.faixasEtarias].sort((x, y) => y.count - x.count)[0];
+  const faixaPredominante =
+    topBand && topBand.count > 0 ? { label: topBand.label, percent: topBand.percent } : null;
 
   const itemsCategorizados = recommendations.filter((r) => {
     const itemCategorizations = categorizations.filter((c) => c.recommendationId === r.id);
@@ -1048,6 +1051,9 @@ app.get("/api/public/report", (req, res) => {
 
   res.json({
     geradoEm: new Date().toISOString(),
+    atualizadoEm: recommendations.length
+      ? recommendations.reduce((latest, r) => (r.submittedAt > latest ? r.submittedAt : latest), "")
+      : null,
     itemsColetados: recommendations.length,
     itemsCategorizados,
     percentCategorizados: recommendations.length
@@ -1063,6 +1069,8 @@ app.get("/api/public/report", (req, res) => {
     intencaoComercial: countBy(categorizations, "commercialIntent"),
     edicaoAparente: countBy(categorizations, "apparentEditing"),
     registrosForaDoFeed: registros.length,
+    faixaPredominante,
+    estadosComRegistros: Object.keys(porEstado).length,
     motivos: overall.motivos,
     recorrencia: overall.recorrencia,
     desejados: overall.desejados,

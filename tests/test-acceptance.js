@@ -392,6 +392,16 @@ async function call(method, path, body, token) {
   ok(publicReport.status === 200, "relatório público não exige login");
   ok(publicReport.data.itemsColetados === 3, "relatório público conta os 3 itens coletados");
   ok(
+    typeof publicReport.data.atualizadoEm === "string" &&
+      !Number.isNaN(Date.parse(publicReport.data.atualizadoEm)),
+    "relatório público informa a data do envio mais recente"
+  );
+  ok(
+    publicReport.data.faixaPredominante.label === "25 a 34 anos" &&
+      publicReport.data.estadosComRegistros === 1,
+    "relatório público informa a faixa etária mais comum e o número de estados com registros"
+  );
+  ok(
     publicReport.data.itemsCategorizados === 1 && publicReport.data.percentConcordancia === 50,
     "relatório público reflete 1 item categorizado e 50% de concordância (igual ao /api/agreement)"
   );
