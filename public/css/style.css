@@ -68,43 +68,61 @@ body {
   margin: 0 0 8px;
 }
 
-/* Identidade visual da tela de login (pedido da Julia): um selo com o
-   ícone do projeto + o título da pesquisa, pra dar identidade antes da
-   participante entrar — aparece só na tela de login, não nas outras. */
+/* Identidade visual da tela de login (pedido da Julia): ícone + nome do
+   sistema + a frase de posicionamento ("Viu algo que não queria ver?
+   Registre."), pra transmitir do que se trata antes da participante
+   entrar — aparece só na tela de login, não nas outras. */
 .brand-mark {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 
 .brand-badge {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 10px 24px rgba(123, 63, 228, 0.28);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
-.brand-name {
-  font-size: 12px;
+.brand-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.brand-mark h1 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+
+.brand-logo-accent {
+  color: var(--color-primary);
+}
+
+.brand-hook {
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.04em;
   color: var(--color-text);
-  margin: 0 0 6px;
+  margin: 0 0 8px;
 }
 
-.brand-tagline {
-  font-size: 12.5px;
-  color: var(--color-text-muted);
-  line-height: 1.5;
+.brand-mark .lead {
+  font-size: 14px;
+  width: 100%;
+  align-self: stretch;
   margin: 0;
-  max-width: 360px;
+  text-align: justify;
 }
 
 /* Acesso ao painel da pesquisadora, discreto por design: linha fininha
@@ -253,6 +271,8 @@ input[type="url"],
 input[type="date"],
 input[type="text"],
 input[type="number"],
+input[type="email"],
+input[type="password"],
 textarea {
   padding: 10px 12px;
   border-radius: 8px;

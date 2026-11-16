@@ -17,28 +17,17 @@
       <section id="screen-login" class="screen" data-screen="login">
         <div class="brand-mark">
           <div class="brand-badge" aria-hidden="true">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="3" y="4" width="13" height="9" rx="2.2" fill="white" fill-opacity="0.92" />
-              <rect x="7" y="11" width="13" height="9" rx="2.2" fill="white" fill-opacity="0.55" />
-              <circle cx="17.5" cy="7.5" r="3.6" fill="none" stroke="white" stroke-width="1.6" />
-              <line x1="20" y1="10" x2="22.3" y2="12.3" stroke="white" stroke-width="1.6" stroke-linecap="round" />
-            </svg>
+            <img src="img/icon-fora-do-feed.png" alt="" width="64" height="64" />
           </div>
-          <p class="brand-name">Fora do Feed &middot; Pesquisa de TCC &middot; UFOP</p>
-          <p class="brand-tagline">
-            Viu algo que não queria ver? Registre. Uma plataforma de pesquisa
-            sobre os conteúdos que mulheres não gostariam de continuar vendo
-            em seus feeds
+          <h1 id="login-welcome-heading">Fora do <span class="brand-logo-accent">Feed</span></h1>
+          <p class="brand-hook">Viu algo que não queria ver? Registre.</p>
+          <p class="lead" id="login-welcome-lead">
+            Fora do Feed é uma plataforma de pesquisa que transforma
+            experiências de mulheres nas redes sociais em dados abertos e
+            anonimizados para gerar conhecimento e apoiar novas soluções
+            para mulheres nas redes sociais.
           </p>
         </div>
-
-        <p class="eyebrow">1 · Entrar</p>
-        <h1>Bem-vinda ao Fora do Feed</h1>
-        <p class="lead">
-          Esta pesquisa busca entender que tipo de conteúdo as redes sociais
-          recomendam a mulheres, relacionado a corpo e aparência. Para
-          participar, crie uma conta ou entre na conta que você já tem.
-        </p>
 
         <!-- Cadastro (nova participante) -->
         <form id="register-form">
@@ -60,7 +49,7 @@
         </form>
 
         <button type="button" id="btn-show-login" class="btn-back-link btn-toggle-auth">
-          Já tenho conta — entrar
+          Fazer login
         </button>
 
         <!-- Login (participante que já tem conta, em outro dispositivo/sessão) -->
@@ -81,7 +70,7 @@
         </form>
 
         <button type="button" id="btn-show-register" class="btn-back-link btn-toggle-auth" hidden>
-          Ainda não tenho conta — cadastrar
+          Fazer cadastro
         </button>
 
         <!--
@@ -107,16 +96,12 @@
         </div>
 
         <!--
-          Acesso ao painel da pesquisadora (Sprint 3), discreto de
-          propósito: não é um botão primário, pra não competir com o
-          fluxo da participante nem confundir quem está ali pra
-          participar da pesquisa. O painel continua protegido por senha
-          (ver admin.html / ADMIN_PASSWORD) — esse link só evita precisar
-          saber o endereço de cor.
+          Pedido da Julia: tirar da tela de login o link de acesso ao
+          painel da pesquisadora (Sprint 3) — o painel em si continua
+          existindo e protegido por senha, só não tem mais um link aqui;
+          quem precisa entrar sabe o endereço (admin.html) de cor.
         -->
         <div class="researcher-access">
-          <a href="admin.html">É da equipe de pesquisa? Acesse o painel da pesquisadora</a>
-          <br />
           <!-- Pedido da Julia: resultados agregados abertos, sem login, pra qualquer pessoa explorar. -->
           <a href="resultados.html">Ver resultados da pesquisa (dados abertos)</a>
         </div>
