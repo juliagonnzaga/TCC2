@@ -21,6 +21,48 @@ function formatMapValue(metric, value) {
   return `${Math.round(value * 10) / 10}%`;
 }
 
+/**
+ * Pedido da Julia (nov/2026): o painel do mapa estava denso demais (a
+ * lista inteira de cada categoria, mais o selo de comparação por
+ * linha). Agora mostra só o item de maior volume de cada categoria
+ * (ex.: só a faixa etária mais comum daquele estado, não as 5), sem
+ * comparação com o total da pesquisa. `labelOnly` omite até a
+ * contagem (usado em "Rede social", onde só o nome já basta).
+ */
+function renderTopOnly(containerId, items, { emptyMessage, labelOnly } = {}) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  const top = (items || [])
+    .filter((item) => item.count > 0)
+    .sort((a, b) => b.count - a.count)[0];
+
+  if (!top) {
+    const p = document.createElement("p");
+    p.className = "report-empty";
+    p.textContent = emptyMessage || "Ainda não há dados suficientes.";
+    container.appendChild(p);
+    return;
+  }
+
+  const row = document.createElement("div");
+  row.className = "bar-row-top";
+
+  const label = document.createElement("span");
+  label.className = "bar-top-label";
+  label.textContent = top.label;
+  row.appendChild(label);
+
+  if (!labelOnly) {
+    const count = document.createElement("span");
+    count.className = "bar-top-count";
+    count.textContent = `${top.count} (${top.percent}%)`;
+    row.appendChild(count);
+  }
+
+  container.appendChild(row);
+}
+
 function buildMetricOptions(select, options) {
   select.innerHTML = "";
 
@@ -97,11 +139,11 @@ async function renderBrazilMap(report) {
     document.getElementById("map-stat-faixa").textContent = state.faixaPredominante
       ? shortBand(state.faixaPredominante)
       : "—";
-    renderBars("map-bars-idade", state.faixasEtarias, { emptyMessage: "Sem dados de idade." });
-    renderBars("map-bars-motivos", state.motivos.slice(0, 5));
-    renderBars("map-bars-recorrencia", state.recorrencia);
-    renderBars("map-bars-desejados", state.desejados.slice(0, 5));
-    renderBars("map-bars-rede", state.porRede);
+    renderTopOnly("map-bars-idade", state.faixasEtarias, { emptyMessage: "Sem dados de idade." });
+    renderTopOnly("map-bars-rede", state.porRede, { labelOnly: true });
+    renderTopOnly("map-bars-recorrencia", state.recorrencia);
+    renderTopOnly("map-bars-motivos", state.motivos);
+    renderTopOnly("map-bars-desejados", state.desejados);
   }
 
   function paintMap() {
