@@ -35,12 +35,6 @@ Inicie o servidor:
 npm start
 ```
 
-O sistema estará disponível em:
-
-- **Participante:** `http://localhost:3000`
-- **Painel da pesquisadora:** `http://localhost:3000/admin.html`
-- **Dados abertos:** `http://localhost:3000/resultados.html`
-
 ### Testes
 
 Para executar os testes automatizados:
