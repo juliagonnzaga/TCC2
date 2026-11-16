@@ -227,7 +227,13 @@ app.post("/api/participants/register", (req, res) => {
 
   const token = crypto.randomUUID();
   validParticipantTokens.set(token, record.id);
-  res.status(201).json({ token, email: record.email, tcleAccepted: false, savedDefaults: null });
+  res.status(201).json({
+    token,
+    email: record.email,
+    tcleAccepted: false,
+    savedDefaults: null,
+    skipInstructions: false,
+  });
 });
 
 /**
@@ -253,6 +259,7 @@ app.post("/api/participants/login", (req, res) => {
     email: participant.email,
     tcleAccepted: !!participant.tcleAcceptedAt,
     savedDefaults: participant.savedDefaults || null,
+    skipInstructions: !!participant.skipInstructions,
   });
 });
 
@@ -321,6 +328,7 @@ app.get("/api/participants/me", requireParticipantAuth, (req, res) => {
     email: participant.email,
     tcleAccepted: !!participant.tcleAcceptedAt,
     savedDefaults: participant.savedDefaults || null,
+    skipInstructions: !!participant.skipInstructions,
   });
 });
 
@@ -343,6 +351,24 @@ app.post("/api/participants/accept-tcle", requireParticipantAuth, (req, res) => 
   res.status(201).json({ tcleAccepted: true, acceptedAt: participants[idx].tcleAcceptedAt });
 });
 
+/**
+ * Sub-tarefa: "Pular as instruções na próxima vez" (pedido da Julia,
+ * checkbox na tela de instruções) — guarda a preferência na conta, pra
+ * a tela de instruções deixar de aparecer (vai direto pra tela de
+ * envio) em acessos futuros, em qualquer dispositivo.
+ */
+app.post("/api/participants/skip-instructions", requireParticipantAuth, (req, res) => {
+  const { skip } = req.body || {};
+  const participants = readJSON(PARTICIPANTS_FILE);
+  const idx = participants.findIndex((p) => p.id === req.participantId);
+  if (idx === -1) {
+    return res.status(401).json({ error: "Sessão inválida. Faça login novamente." });
+  }
+  participants[idx].skipInstructions = skip === true;
+  writeJSON(PARTICIPANTS_FILE, participants);
+  res.status(200).json({ skipInstructions: participants[idx].skipInstructions });
+});
+
 /* ===================== Sprint 2: Coleta de recomendações ===================== */
 
 const WHY_REASONS = [
@@ -361,7 +387,6 @@ const RECURRENCE_OPTIONS = [
   "Vejo com frequência",
   "Não sei dizer",
 ];
-const FREQUENT_RECURRENCE = "Vejo com frequência";
 const DESIRED_CONTENT = [
   "Diversidade de corpos",
   "Saúde sem foco em emagrecimento",
@@ -1043,13 +1068,20 @@ app.get("/api/public/report", (req, res) => {
     if (list.length > 0) porFaixa[label] = withPrivacyGate(list);
   }
 
+  // Pedido da Julia (nov/2026): a representação antiga mostrava só a
+  // fatia "vejo com frequência" de cada motivo, o que ficava 0%/0
+  // registros (e parecia bugado) sempre que nenhuma participante daquele
+  // motivo tivesse marcado justo essa opção — mesmo havendo registros
+  // nas outras 3 opções de recorrência. Agora manda a distribuição
+  // completa (recurrenceBreakdown, já usada em outros lugares do
+  // relatório) pra cada motivo, e o front-end desenha uma barra
+  // segmentada com as 4 fatias em vez de só uma.
   const recorrenciaPorMotivo = WHY_REASONS.map((label) => {
     const group = registros.filter((r) => r.whyReasons.includes(label));
-    const frequentes = group.filter((r) => r.recurrence === FREQUENT_RECURRENCE).length;
-    return { label, total: group.length, count: frequentes, percent: percentOf(frequentes, group.length) };
+    return { label, total: group.length, recorrencia: recurrenceBreakdown(group) };
   })
     .filter((item) => item.total > 0)
-    .sort((x, y) => y.percent - x.percent);
+    .sort((x, y) => y.total - x.total);
 
   const overall = summarize(registros);
   const topBand = [...overall.faixasEtarias].sort((x, y) => y.count - x.count)[0];

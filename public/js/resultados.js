@@ -92,6 +92,92 @@ function renderColumns(containerId, items, { emptyMessage } = {}) {
   container.appendChild(chart);
 }
 
+// Pedido da Julia (nov/2026): a seção "Quais conteúdos são mais
+// recorrentes?" mostrava só a fatia "vejo com frequência" de cada
+// motivo (um valor só, no mesmo gráfico de colunas das outras seções),
+// o que ficava 0%/0 registros — parecendo "sem dados" por engano —
+// sempre que nenhuma participante daquele motivo tivesse marcado justo
+// essa opção, mesmo havendo registros nas outras 3 opções de
+// recorrência. Agora desenha uma barra segmentada por motivo com a
+// distribuição completa das 4 respostas, cores fixas na mesma ordem em
+// toda a lista, e uma legenda só (não repetida em cada barra).
+const RECURRENCE_COLORS = ["--viz-series-1", "--viz-series-2", "--viz-series-3", "--viz-series-4"];
+
+function renderRecurrenceByMotivo(containerId, items) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  if (!items || items.length === 0) {
+    const p = document.createElement("p");
+    p.className = "report-empty";
+    p.textContent = "Ainda não há registros.";
+    container.appendChild(p);
+    return;
+  }
+
+  // A ordem das opções de recorrência é fixa e igual em todas as
+  // barras (recurrenceBreakdown sempre devolve as 4, mesmo com 0
+  // registros), então o primeiro item já serve pra montar a legenda.
+  const legend = document.createElement("div");
+  legend.className = "motivo-legend";
+  legend.setAttribute("role", "list");
+  items[0].recorrencia.forEach((rec, i) => {
+    const entry = document.createElement("span");
+    entry.className = "motivo-legend-item";
+    entry.setAttribute("role", "listitem");
+    const swatch = document.createElement("i");
+    swatch.className = "motivo-legend-swatch";
+    swatch.style.background = `var(${RECURRENCE_COLORS[i]})`;
+    entry.appendChild(swatch);
+    entry.appendChild(document.createTextNode(rec.label));
+    legend.appendChild(entry);
+  });
+  container.appendChild(legend);
+
+  const list = document.createElement("div");
+  list.setAttribute("role", "list");
+
+  for (const item of items) {
+    const row = document.createElement("div");
+    row.className = "motivo-row";
+    row.setAttribute("role", "listitem");
+
+    const header = document.createElement("div");
+    header.className = "motivo-row-header";
+    const title = document.createElement("span");
+    title.textContent = item.label;
+    const n = document.createElement("span");
+    n.className = "motivo-row-n";
+    n.textContent = `n=${item.total}`;
+    header.appendChild(title);
+    header.appendChild(n);
+
+    const bar = document.createElement("div");
+    bar.className = "motivo-row-bar";
+    bar.setAttribute("role", "img");
+    bar.setAttribute(
+      "aria-label",
+      item.recorrencia.map((rec) => `${rec.label}: ${rec.count} (${rec.percent}%)`).join(", ")
+    );
+
+    item.recorrencia.forEach((rec, i) => {
+      if (rec.count === 0) return; // uma fatia zerada não desenha nada
+      const seg = document.createElement("span");
+      seg.className = "motivo-row-seg";
+      seg.style.background = `var(${RECURRENCE_COLORS[i]})`;
+      seg.style.flexGrow = rec.count;
+      seg.title = `${rec.label}: ${rec.count} (${rec.percent}%)`;
+      bar.appendChild(seg);
+    });
+
+    row.appendChild(header);
+    row.appendChild(bar);
+    list.appendChild(row);
+  }
+
+  container.appendChild(list);
+}
+
 function renderAgeMatrix(data) {
   const container = document.getElementById("age-matrix");
   const select = document.getElementById("matrix-metric");
@@ -184,11 +270,7 @@ async function loadReport() {
 
     renderColumns("bars-rede", data.porRede, { emptyMessage: "Ainda não há envios." });
     renderColumns("bars-motivos", data.motivos, { emptyMessage: "Ainda não há registros." });
-    renderColumns(
-      "bars-recorrencia-motivo",
-      data.recorrenciaPorMotivo.map((item) => ({ ...item, label: `${item.label} (n=${item.total})` })),
-      { emptyMessage: "Ainda não há registros." }
-    );
+    renderRecurrenceByMotivo("bars-recorrencia-motivo", data.recorrenciaPorMotivo);
     renderColumns("bars-recorrencia", data.recorrencia, { emptyMessage: "Ainda não há registros." });
     renderColumns("bars-desejados", data.desejados, { emptyMessage: "Ainda não há registros." });
     document.getElementById("matrix-min-participants").textContent = data.minimoParticipantes;

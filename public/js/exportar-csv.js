@@ -24,13 +24,15 @@ function buildCsv(data) {
   add("Resumo", "Geral", "Estados com registros", data.estadosComRegistros, "", "");
   addList("Motivos para colocar Fora do Feed", "Geral", data.motivos);
   data.recorrenciaPorMotivo.forEach((entry) =>
-    add(
-      "Recorrência por motivo (vejo com frequência)",
-      "Geral",
-      entry.label,
-      entry.count,
-      entry.percent,
-      `Registros com o motivo: ${entry.total}`
+    entry.recorrencia.forEach((rec) =>
+      add(
+        "Recorrência por motivo",
+        entry.label,
+        rec.label,
+        rec.count,
+        rec.percent,
+        `Registros com o motivo: ${entry.total}`
+      )
     )
   );
   addList("Costuma encontrar conteúdos parecidos", "Geral", data.recorrencia);

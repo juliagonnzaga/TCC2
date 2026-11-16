@@ -60,6 +60,18 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   await page.waitForSelector("#screen-instructions:not([hidden])");
   await page.screenshot({ path: "shot-3-instructions.png" });
 
+  // Pedido da Julia (nov/2026): o eyebrow "3 · Instruções de coleta"
+  // saiu e o botão "Entendi, começar" virou "Continuar". O checkbox
+  // "Pular as instruções na próxima vez" tem teste próprio, em
+  // test-skip-instructions.js.
+  if (await page.locator("#screen-instructions .eyebrow").count() > 0) {
+    throw new Error('Eyebrow "3 · Instruções de coleta" deveria ter sido removido da tela de instruções.');
+  }
+  const startBtnText = (await page.locator("#btn-start").innerText()).trim();
+  if (startBtnText !== "Continuar") {
+    throw new Error(`Texto do botão de instruções inesperado: "${startBtnText}" (esperado "Continuar")`);
+  }
+
   // Screen 3 -> 4: envio de recomendação (Sprint 2)
   await page.click("#btn-start");
   await page.waitForSelector("#screen-submit:not([hidden])");

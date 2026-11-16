@@ -9,6 +9,16 @@
   --color-border: #e3ddec;
   --color-error: #c22e4c;
   --radius: 14px;
+
+  /* Paleta categórica (identidade, nunca ciclada) pra gráficos que
+     precisam distinguir séries — ex.: a barra segmentada de recorrência
+     por motivo em resultados.html. Ordem fixa validada (CVD-safe) pelo
+     método de visualização de dados do projeto; nenhuma outra parte do
+     site usa essas variáveis, só mantém o --color-primary roxo. */
+  --viz-series-1: #2a78d6;
+  --viz-series-2: #eb6834;
+  --viz-series-3: #1baf7a;
+  --viz-series-4: #eda100;
 }
 
 * {
@@ -171,6 +181,24 @@ h1 {
   margin: 0 0 20px;
 }
 
+/* Pedido da Julia: nota sobre anonimização na página de resultados
+   (resultados.html) — fonte menor que o .lead normal, com um ícone
+   informativo do lado. */
+.lead-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin: 0 0 20px;
+}
+
+.lead-note svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-primary);
+}
+
 .tcle-box {
   border: 1px solid var(--color-border);
   border-radius: 10px;
@@ -196,6 +224,12 @@ h1 {
   font-size: 14px;
   margin-bottom: 20px;
   cursor: pointer;
+}
+
+/* Pedido da Julia: espaço entre o botão "Continuar" e o checkbox
+   "Pular as instruções na próxima vez", que fica logo abaixo dele. */
+.checkbox-row--spaced {
+  margin-top: 18px;
 }
 
 .checkbox-row input {
@@ -1010,6 +1044,69 @@ textarea {
 .report-empty {
   color: var(--color-text-muted);
   font-size: 13.5px;
+}
+
+/* Pedido da Julia (nov/2026): barra segmentada por motivo em "Quais
+   conteúdos são mais recorrentes?" (resultados.html) — uma legenda só
+   pra lista inteira (a ordem das cores é igual em todas as barras), e
+   por baixo, uma linha por motivo com o rótulo + n à esquerda e a
+   barrinha fina com as 4 fatias de recorrência à direita. */
+.motivo-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+}
+
+.motivo-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.motivo-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.motivo-row {
+  margin-bottom: 14px;
+}
+
+.motivo-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.motivo-row-n {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Barra fina (8px), pontas totalmente arredondadas e um respiro de 2px
+   em cor de superfície entre as fatias — o fundo claro aparece nesse
+   respiro, então ele já separa as fatias sem precisar de borda. */
+.motivo-row-bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--color-border);
+}
+
+.motivo-row-seg {
+  height: 100%;
 }
 
 .report-footer-note {

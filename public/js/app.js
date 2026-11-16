@@ -29,13 +29,17 @@ const state = {
   // "Salvar meus dados para a próxima vez", tela de envio) — igual ao
   // tcleAccepted, só fica em memória, vem sempre fresco do back-end.
   savedDefaults: null,
+  // Pedido da Julia: "Pular as instruções na próxima vez" (checkbox na
+  // tela de instruções) — mesma lógica do savedDefaults acima.
+  skipInstructions: false,
 };
 
-function saveSession(token, email, tcleAccepted, savedDefaults) {
+function saveSession(token, email, tcleAccepted, savedDefaults, skipInstructions) {
   state.token = token;
   state.email = email;
   state.tcleAccepted = !!tcleAccepted;
   state.savedDefaults = savedDefaults || null;
+  state.skipInstructions = !!skipInstructions;
   localStorage.setItem("participantToken", token);
   localStorage.setItem("participantEmail", email);
 }
@@ -45,8 +49,18 @@ function clearSession() {
   state.email = null;
   state.tcleAccepted = false;
   state.savedDefaults = null;
+  state.skipInstructions = false;
   localStorage.removeItem("participantToken");
   localStorage.removeItem("participantEmail");
+}
+
+// Pedido da Julia: depois de logada + com o TCLE aceito, decide se cai
+// nas instruções ou pula direto pra tela de envio (checkbox "Pular as
+// instruções na próxima vez"). Usado em todo ponto que antes ia sempre
+// pra "instructions" assim que a conta já tinha aceitado o TCLE.
+function nextScreenAfterAuth() {
+  if (!state.tcleAccepted) return "tcle";
+  return state.skipInstructions ? "submit" : "instructions";
 }
 
 function authHeaders() {
@@ -84,6 +98,9 @@ function showScreen(name) {
   }
   if (name === "tcle") {
     renderTcleScreen();
+  }
+  if (name === "instructions") {
+    renderInstructionsScreen();
   }
   if (name === "submit") {
     renderSubmitScreen();
@@ -141,9 +158,10 @@ function renderLoginScreen() {
   }
 }
 
-// "Continuar" depende de a conta já ter aceitado o TCLE antes ou não.
+// "Continuar" depende de a conta já ter aceitado o TCLE antes ou não
+// (e, se já aceitou, se marcou "Pular as instruções na próxima vez").
 document.getElementById("btn-login-continue").addEventListener("click", () => {
-  showScreen(state.tcleAccepted ? "instructions" : "tcle");
+  showScreen(nextScreenAfterAuth());
 });
 
 document.querySelectorAll(".btn-back-link:not(.btn-toggle-auth):not(.btn-logout)").forEach((btn) => {
@@ -180,8 +198,8 @@ registerForm.addEventListener("submit", async (event) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Não foi possível criar sua conta agora.");
 
-    saveSession(data.token, data.email, data.tcleAccepted, data.savedDefaults);
-    showScreen(state.tcleAccepted ? "instructions" : "tcle");
+    saveSession(data.token, data.email, data.tcleAccepted, data.savedDefaults, data.skipInstructions);
+    showScreen(nextScreenAfterAuth());
   } catch (err) {
     showError("register-error", err.message);
   } finally {
@@ -209,8 +227,8 @@ loginForm.addEventListener("submit", async (event) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Não foi possível entrar.");
 
-    saveSession(data.token, data.email, data.tcleAccepted, data.savedDefaults);
-    showScreen(state.tcleAccepted ? "instructions" : "tcle");
+    saveSession(data.token, data.email, data.tcleAccepted, data.savedDefaults, data.skipInstructions);
+    showScreen(nextScreenAfterAuth());
   } catch (err) {
     showError("login-error", err.message);
   } finally {
@@ -311,7 +329,7 @@ function renderTcleScreen() {
 }
 
 document.getElementById("btn-tcle-continue").addEventListener("click", () => {
-  showScreen("instructions");
+  showScreen(nextScreenAfterAuth());
 });
 
 tcleForm.addEventListener("submit", async (event) => {
@@ -343,7 +361,7 @@ tcleForm.addEventListener("submit", async (event) => {
     if (!res.ok) throw new Error(data.error || "Não foi possível registrar o aceite agora.");
 
     state.tcleAccepted = true;
-    showScreen("instructions");
+    showScreen(nextScreenAfterAuth());
   } catch (err) {
     showError("tcle-error", err.message);
   } finally {
@@ -354,7 +372,34 @@ tcleForm.addEventListener("submit", async (event) => {
 
 /* ---------- Tela 3 -> 4: Instruções -> Envio ---------- */
 
-document.getElementById("btn-start").addEventListener("click", () => {
+const skipInstructionsCheckbox = document.getElementById("skip-instructions-checkbox");
+
+// Mostra o checkbox já marcado se a conta tinha pedido pra pular as
+// instruções numa vez anterior (ex.: voltou aqui pelo "← Voltar").
+function renderInstructionsScreen() {
+  skipInstructionsCheckbox.checked = state.skipInstructions;
+}
+
+document.getElementById("btn-start").addEventListener("click", async () => {
+  const skip = skipInstructionsCheckbox.checked;
+  if (skip !== state.skipInstructions && state.token) {
+    try {
+      const res = await fetch("/api/participants/skip-instructions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ skip }),
+      });
+      if (res.status === 401) {
+        handleExpiredSession();
+        return;
+      }
+      if (res.ok) state.skipInstructions = skip;
+    } catch (err) {
+      // Pedido da Julia: a preferência é só uma conveniência de
+      // navegação — se salvar falhar (ex.: sem rede), segue o fluxo
+      // normalmente em vez de travar a participante na tela.
+    }
+  }
   showScreen("submit");
 });
 
@@ -825,7 +870,8 @@ document.getElementById("btn-logout").addEventListener("click", () => {
     const data = await res.json();
     state.tcleAccepted = !!data.tcleAccepted;
     state.savedDefaults = data.savedDefaults || null;
-    showScreen(state.tcleAccepted ? "instructions" : "tcle");
+    state.skipInstructions = !!data.skipInstructions;
+    showScreen(nextScreenAfterAuth());
   } catch (err) {
     clearSession();
     showScreen("login");

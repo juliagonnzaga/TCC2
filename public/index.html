@@ -164,7 +164,6 @@
            conta ainda não tiver aceitado (ver tcleAccepted em app.js). -->
       <section id="screen-tcle" class="screen" data-screen="tcle" hidden>
         <button type="button" class="btn-back-link">← Voltar</button>
-        <p class="eyebrow">2 · Termo de Consentimento</p>
         <h1>Termo de Consentimento Livre e Esclarecido (TCLE)</h1>
 
         <div class="tcle-box" tabindex="0" aria-label="Termo de Consentimento Livre e Esclarecido">
@@ -329,7 +328,6 @@
       <!-- User story: Tela de Instruções de Coleta (sem back-end) -->
       <section id="screen-instructions" class="screen" data-screen="instructions" hidden>
         <button type="button" class="btn-back-link">← Voltar</button>
-        <p class="eyebrow">3 · Instruções de coleta</p>
         <h1>Como participar</h1>
 
         <ol class="steps">
@@ -350,8 +348,20 @@
         </ol>
 
         <button id="btn-start" class="btn btn-primary">
-          Entendi, começar
+          Continuar
         </button>
+
+        <!--
+          Pedido da Julia: ao marcar, essa tela de instruções deixa de
+          aparecer nos próximos acessos (vai direto pra tela de envio),
+          pra encurtar a navegação de quem já sabe como funciona. Ver
+          POST /api/participants/skip-instructions e o campo
+          skipInstructions em GET /api/participants/me.
+        -->
+        <label class="checkbox-row checkbox-row--spaced">
+          <input type="checkbox" id="skip-instructions-checkbox" />
+          <span>Pular as instruções na próxima vez</span>
+        </label>
       </section>
 
       <!-- ===================== TELA 3: Envio de recomendação ===================== -->
