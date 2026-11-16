@@ -125,25 +125,39 @@ body {
   text-align: justify;
 }
 
-/* Acesso ao painel da pesquisadora, discreto por design: linha fininha
-   separada por uma borda, só texto, sem aparência de botão — pra não
-   disputar atenção com "Criar conta" / "Entrar". */
 .researcher-access {
-  margin-top: 28px;
-  padding-top: 16px;
+  margin-top: 24px;
+  padding-top: 20px;
   border-top: 1px solid var(--color-border);
   text-align: center;
 }
 
-.researcher-access a {
-  font-size: 12px;
-  color: var(--color-text-muted);
+/* Pedido da Julia: o link pros resultados abertos estava "escondido
+   demais" como texto simples — agora é um botão de verdade, com ícone,
+   pra ficar fácil de encontrar (mas em roxo mais claro/outline, não o
+   roxo cheio do "Criar conta"/"Entrar", pra não competir com eles). */
+.researcher-access .btn-results {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-primary);
+  background: rgba(123, 63, 228, 0.06);
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 700;
   text-decoration: none;
 }
 
-.researcher-access a:hover {
-  color: var(--color-primary);
-  text-decoration: underline;
+.researcher-access .btn-results:hover {
+  background: rgba(123, 63, 228, 0.14);
+}
+
+.researcher-access .btn-results svg {
+  flex-shrink: 0;
 }
 
 h1 {
@@ -411,6 +425,27 @@ textarea {
   width: 100%;
   text-align: center;
   margin: 16px 0 0;
+}
+
+/* Pedido da Julia: "Esqueci minha senha" dentro do login-form, logo
+   abaixo do campo Senha — discreto, alinhado à esquerda, sem o destaque
+   de botão de ação cheio (isso é reservado para o "Entrar" abaixo). */
+.btn-link-inline {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin: -6px 0 18px;
+}
+
+.btn-link-inline:hover {
+  color: var(--color-primary);
 }
 
 /* Mesmo motivo do .modal-overlay[hidden] acima: sem isso, o display:block

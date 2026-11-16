@@ -33,6 +33,18 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   const email = `testadora-${Date.now()}@example.com`;
   await page.fill("#register-email", email);
   await page.fill("#register-password", "senha123");
+  await page.fill("#register-confirm-password", "senhaDiferente");
+  await page.click('#register-form button[type=submit]');
+
+  // Pedido da Julia: senha e confirmação diferentes mostram erro e não
+  // enviam o cadastro.
+  await page.waitForSelector("#register-error:not([hidden])");
+  const confirmErrorText = await page.locator("#register-error").innerText();
+  if (confirmErrorText !== "As senhas estão diferentes, digite a mesma senha") {
+    throw new Error(`Mensagem de senhas diferentes inesperada: "${confirmErrorText}"`);
+  }
+
+  await page.fill("#register-confirm-password", "senha123");
   await page.click('#register-form button[type=submit]');
 
   // Screen 1 -> 2: cadastro leva à tela de TCLE (conta nova, ainda não aceitou)
@@ -129,6 +141,11 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   await page.waitForSelector("#screen-status:not([hidden])");
   await page.click("#btn-logout");
   await page.waitForSelector("#screen-login:not([hidden])");
+
+  // "Esqueci minha senha" agora só aparece no modo "Fazer login" (não
+  // faz sentido no cadastro, que é tela padrão após sair da conta).
+  await page.click("#btn-show-login");
+  await page.waitForSelector("#login-form:not([hidden])");
 
   await page.click("#btn-forgot-password");
   await page.waitForSelector("#screen-reset-password:not([hidden])");

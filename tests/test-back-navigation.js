@@ -50,6 +50,7 @@ async function runFlow(browser) {
   const email = `testadora-voltar-${Date.now()}@example.com`;
   await page.fill("#register-email", email);
   await page.fill("#register-password", "senha123");
+  await page.fill("#register-confirm-password", "senha123");
   await page.click('#register-form button[type=submit]');
 
   // ---- Tela 2 (TCLE): aceita ----

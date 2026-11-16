@@ -100,6 +100,10 @@ const btnShowLogin = document.getElementById("btn-show-login");
 const btnShowRegister = document.getElementById("btn-show-register");
 const btnForgotPassword = document.getElementById("btn-forgot-password");
 const loginAlreadyDone = document.getElementById("login-already-done");
+// Pedido da Julia: "Esqueci minha senha" agora mora dentro do próprio
+// login-form (não faz sentido no cadastro, já que a senha é nova), então
+// sua visibilidade já é resolvida pelo hidden do form — nada a mais a
+// controlar aqui.
 
 function setAuthMode(mode) {
   const isLogin = mode === "login";
@@ -122,10 +126,8 @@ function renderLoginScreen() {
     loginForm.hidden = true;
     btnShowLogin.hidden = true;
     btnShowRegister.hidden = true;
-    btnForgotPassword.hidden = true;
   } else {
     loginAlreadyDone.hidden = true;
-    btnForgotPassword.hidden = false;
     setAuthMode("register");
   }
 }
@@ -149,6 +151,13 @@ registerForm.addEventListener("submit", async (event) => {
 
   const email = document.getElementById("register-email").value.trim();
   const password = document.getElementById("register-password").value;
+  const confirmPassword = document.getElementById("register-confirm-password").value;
+
+  if (password !== confirmPassword) {
+    showError("register-error", "As senhas estão diferentes, digite a mesma senha");
+    return;
+  }
+
   const registerBtn = registerForm.querySelector("button[type=submit]");
   registerBtn.disabled = true;
   registerBtn.textContent = "Criando...";

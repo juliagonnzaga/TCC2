@@ -41,6 +41,11 @@
             <input type="password" id="register-password" autocomplete="new-password" minlength="6" required />
           </label>
 
+          <label class="field">
+            <span>Confirmar senha</span>
+            <input type="password" id="register-confirm-password" autocomplete="new-password" minlength="6" required />
+          </label>
+
           <button type="submit" class="btn btn-primary">
             Criar conta
           </button>
@@ -64,6 +69,16 @@
             <input type="password" id="login-password" autocomplete="current-password" required />
           </label>
 
+          <!--
+            Pedido da Julia: "Esqueci minha senha" só faz sentido no modo
+            login (no cadastro a senha é nova, recém-criada), então o
+            link mora aqui dentro do login-form — sua visibilidade já
+            segue o hidden do form, sem precisar de JS extra.
+          -->
+          <button type="button" id="btn-forgot-password" class="btn-link-inline">
+            Esqueci minha senha
+          </button>
+
           <button type="submit" class="btn btn-primary">Entrar</button>
 
           <p class="error-msg" id="login-error" hidden></p>
@@ -71,15 +86,6 @@
 
         <button type="button" id="btn-show-register" class="btn-back-link btn-toggle-auth" hidden>
           Fazer cadastro
-        </button>
-
-        <!--
-          Pedido da Julia: visível tanto no modo cadastro quanto no modo
-          login (não é alternado por setAuthMode como os dois botões
-          acima) — some só quando a participante já está conectada.
-        -->
-        <button type="button" id="btn-forgot-password" class="btn-back-link btn-toggle-auth">
-          Esqueci minha senha
         </button>
 
         <!--
@@ -102,8 +108,17 @@
           quem precisa entrar sabe o endereço (admin.html) de cor.
         -->
         <div class="researcher-access">
-          <!-- Pedido da Julia: resultados agregados abertos, sem login, pra qualquer pessoa explorar. -->
-          <a href="resultados.html">Ver resultados da pesquisa (dados abertos)</a>
+          <!-- Pedido da Julia: resultados agregados abertos, sem login, pra
+               qualquer pessoa explorar — em destaque, não só um link de
+               texto, pra ficar fácil de encontrar. -->
+          <a href="resultados.html" class="btn-results">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="4" y="12" width="4" height="8" rx="1" fill="currentColor" />
+              <rect x="10" y="7" width="4" height="13" rx="1" fill="currentColor" />
+              <rect x="16" y="3" width="4" height="17" rx="1" fill="currentColor" />
+            </svg>
+            Ver resultados da pesquisa
+          </a>
         </div>
       </section>
 
