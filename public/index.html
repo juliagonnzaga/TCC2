@@ -358,7 +358,6 @@
       <!-- User story: Sistema de Envio de Recomendação -->
       <section id="screen-submit" class="screen" data-screen="submit" hidden>
         <button type="button" class="btn-back-link">← Voltar</button>
-        <p class="eyebrow">4 · Registrar conteúdo</p>
         <h1>Fora do Feed</h1>
         <p class="lead" id="submit-progress">
           Viu algo que não queria ver? Registre.
@@ -430,6 +429,18 @@
               <ul class="combo-list" id="rec-city-list" role="listbox" hidden></ul>
             </div>
           </div>
+
+          <!--
+            Pedido da Julia: ao marcar, salva idade/estado/cidade na
+            conta, pra já vir preenchido nos próximos envios (sem
+            precisar digitar de novo toda vez). Ver POST
+            /api/recommendations (campo savePreferences) e GET
+            /api/participants/me (campo savedDefaults).
+          -->
+          <label class="checkbox-row">
+            <input type="checkbox" id="rec-save-prefs" />
+            <span>Salvar meus dados para a próxima vez</span>
+          </label>
 
           <label class="field">
             <span>Link do conteúdo</span>

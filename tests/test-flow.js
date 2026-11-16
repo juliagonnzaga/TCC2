@@ -64,12 +64,22 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   await page.click("#btn-start");
   await page.waitForSelector("#screen-submit:not([hidden])");
 
+  // Pedido da Julia (nov/2026): o eyebrow "4 · Registrar conteúdo" saiu
+  // da tela de envio.
+  if (await page.locator("#screen-submit .eyebrow").count() > 0) {
+    throw new Error('Eyebrow "4 · Registrar conteúdo" deveria ter sido removido da tela de envio.');
+  }
+
   await page.fill("#rec-link", "https://www.instagram.com/reel/teste123");
   await page.selectOption("#rec-age-band", "25 a 34 anos");
   await page.selectOption("#rec-state", "MG");
   await page.fill("#rec-city", "belo horizonte");
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
+  // Pedido da Julia (nov/2026): marca "Salvar meus dados para a próxima
+  // vez" — idade/estado/cidade devem vir pré-preenchidos num próximo
+  // login, sem precisar digitar tudo de novo.
+  await page.check("#rec-save-prefs");
   await page.click('label.chip:has(input[name="rec-why"][value="Incentiva dieta ou emagrecimento"])');
   await page.click('label.chip:has(input[name="rec-recurrence"][value="Vejo com frequência"])');
   await page.click('label.chip:has(input[name="rec-desired"][value="Diversidade de corpos"])');
@@ -132,6 +142,25 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   await page.click('#login-form button[type=submit]');
   await page.waitForSelector("#screen-instructions:not([hidden])");
 
+  // Pedido da Julia (nov/2026): "Salvar meus dados para a próxima vez"
+  // — como a participante marcou o checkbox no envio anterior, idade,
+  // estado e cidade devem vir pré-preenchidos (e o checkbox já marcado
+  // de novo) sem precisar digitar nada.
+  await page.click("#btn-start");
+  await page.waitForSelector("#screen-submit:not([hidden])");
+  await page.waitForFunction(() => document.getElementById("rec-city").value !== "");
+  const savedAgeBand = await page.locator("#rec-age-band").inputValue();
+  const savedState = await page.locator("#rec-state").inputValue();
+  const savedCity = await page.locator("#rec-city").inputValue();
+  const savedCheckbox = await page.locator("#rec-save-prefs").isChecked();
+  if (savedAgeBand !== "25 a 34 anos" || savedState !== "MG" || savedCity !== "Belo Horizonte" || !savedCheckbox) {
+    throw new Error(
+      `Dados salvos não vieram pré-preenchidos como esperado: idade="${savedAgeBand}", estado="${savedState}", cidade="${savedCity}", checkbox=${savedCheckbox}`
+    );
+  }
+  await page.click("#screen-submit .btn-back-link");
+  await page.waitForSelector("#screen-instructions:not([hidden])");
+
   // "Esqueci minha senha" (pedido da Julia): sai de novo, clica em
   // "Esqueci minha senha" a partir da tela de login, redefine, confirma
   // o modal de feedback e entra de novo já com a senha nova.
@@ -176,6 +205,43 @@ const launchOptions = process.env.PW_CHROMIUM_PATH
   await page.fill("#login-password", "senhaNova456");
   await page.click('#login-form button[type=submit]');
   await page.waitForSelector("#screen-instructions:not([hidden])");
+
+  // Os dados salvos sobrevivem à redefinição de senha (ela não mexe em
+  // savedDefaults, só na senha).
+  await page.click("#btn-start");
+  await page.waitForSelector("#screen-submit:not([hidden])");
+  await page.waitForFunction(() => document.getElementById("rec-city").value !== "");
+
+  // Desmarcando "Salvar meus dados" e enviando de novo: deve parar de
+  // salvar — um próximo login não deve vir mais pré-preenchido.
+  await page.uncheck("#rec-save-prefs");
+  await page.fill("#rec-link", "https://www.instagram.com/reel/teste-desmarcar-salvar");
+  await page.click('label.chip:has(input[name="rec-why"][value="Incentiva dieta ou emagrecimento"])');
+  await page.click('label.chip:has(input[name="rec-recurrence"][value="Vejo com frequência"])');
+  await page.click('label.chip:has(input[name="rec-desired"][value="Diversidade de corpos"])');
+  await page.click('#submit-form button[type=submit]');
+  await page.waitForSelector("#submit-success-modal:not([hidden])");
+  await page.click("#btn-modal-status");
+  await page.waitForSelector("#submit-success-modal", { state: "hidden" });
+  await page.waitForSelector("#screen-status:not([hidden])");
+  await page.click("#btn-logout");
+  await page.waitForSelector("#screen-login:not([hidden])");
+
+  await page.click("#btn-show-login");
+  await page.fill("#login-email", email);
+  await page.fill("#login-password", "senhaNova456");
+  await page.click('#login-form button[type=submit]');
+  await page.waitForSelector("#screen-instructions:not([hidden])");
+  await page.click("#btn-start");
+  await page.waitForSelector("#screen-submit:not([hidden])");
+
+  const clearedAgeBand = await page.locator("#rec-age-band").inputValue();
+  const clearedCheckbox = await page.locator("#rec-save-prefs").isChecked();
+  if (clearedAgeBand !== "" || clearedCheckbox) {
+    throw new Error(
+      `Depois de desmarcar "Salvar meus dados", um novo login não deveria vir pré-preenchido: idade="${clearedAgeBand}", checkbox=${clearedCheckbox}`
+    );
+  }
 
   if (errors.length) {
     console.error("Erros de console/página encontrados:", errors);

@@ -25,12 +25,17 @@ const state = {
   token: localStorage.getItem("participantToken") || null,
   email: localStorage.getItem("participantEmail") || null,
   tcleAccepted: false,
+  // Pedido da Julia: idade/estado/cidade salvos na conta (checkbox
+  // "Salvar meus dados para a próxima vez", tela de envio) — igual ao
+  // tcleAccepted, só fica em memória, vem sempre fresco do back-end.
+  savedDefaults: null,
 };
 
-function saveSession(token, email, tcleAccepted) {
+function saveSession(token, email, tcleAccepted, savedDefaults) {
   state.token = token;
   state.email = email;
   state.tcleAccepted = !!tcleAccepted;
+  state.savedDefaults = savedDefaults || null;
   localStorage.setItem("participantToken", token);
   localStorage.setItem("participantEmail", email);
 }
@@ -39,6 +44,7 @@ function clearSession() {
   state.token = null;
   state.email = null;
   state.tcleAccepted = false;
+  state.savedDefaults = null;
   localStorage.removeItem("participantToken");
   localStorage.removeItem("participantEmail");
 }
@@ -78,6 +84,9 @@ function showScreen(name) {
   }
   if (name === "tcle") {
     renderTcleScreen();
+  }
+  if (name === "submit") {
+    renderSubmitScreen();
   }
 }
 
@@ -171,7 +180,7 @@ registerForm.addEventListener("submit", async (event) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Não foi possível criar sua conta agora.");
 
-    saveSession(data.token, data.email, data.tcleAccepted);
+    saveSession(data.token, data.email, data.tcleAccepted, data.savedDefaults);
     showScreen(state.tcleAccepted ? "instructions" : "tcle");
   } catch (err) {
     showError("register-error", err.message);
@@ -200,7 +209,7 @@ loginForm.addEventListener("submit", async (event) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Não foi possível entrar.");
 
-    saveSession(data.token, data.email, data.tcleAccepted);
+    saveSession(data.token, data.email, data.tcleAccepted, data.savedDefaults);
     showScreen(state.tcleAccepted ? "instructions" : "tcle");
   } catch (err) {
     showError("login-error", err.message);
@@ -374,6 +383,28 @@ const OTHER_DESIRED = "Outro";
 const stateSelect = document.getElementById("rec-state");
 const cityInput = document.getElementById("rec-city");
 const cityList = document.getElementById("rec-city-list");
+const savePrefsCheckbox = document.getElementById("rec-save-prefs");
+
+// Pedido da Julia: ao entrar na tela de envio, se a conta já tem
+// idade/estado/cidade salvos (checkbox marcado numa vez anterior),
+// pré-preenche os três campos e deixa o checkbox marcado de novo —
+// assim a participante não precisa digitar tudo de novo a cada envio.
+function renderSubmitScreen() {
+  if (state.savedDefaults) {
+    ageBandSelect.value = state.savedDefaults.ageBand || "";
+    stateSelect.value = state.savedDefaults.state || "";
+    fillCities(state.savedDefaults.state, state.savedDefaults.city);
+    savePrefsCheckbox.checked = true;
+  } else {
+    // Sem dados salvos: garante que não sobra idade/estado/cidade de
+    // uma conta anterior (ex.: saiu e entrou com outra conta sem dar
+    // refresh na página).
+    ageBandSelect.value = "";
+    stateSelect.value = "";
+    fillCities("");
+    savePrefsCheckbox.checked = false;
+  }
+}
 
 const NETWORK_HOSTS = [
   ["instagram.com", "Instagram"],
@@ -600,6 +631,7 @@ submitForm.addEventListener("submit", async (event) => {
   const whyOther = whyOtherInput.value.trim();
   const desiredOther = desiredOtherInput.value.trim();
   const comment = document.getElementById("rec-comment").value.trim();
+  const savePreferences = savePrefsCheckbox.checked;
 
   if (!ageBand) {
     showError("submit-error", "Escolha sua faixa de idade.");
@@ -657,6 +689,7 @@ submitForm.addEventListener("submit", async (event) => {
         desiredContent,
         desiredOther: desiredContent.includes(OTHER_DESIRED) ? desiredOther : undefined,
         comment: comment || undefined,
+        savePreferences,
       }),
     });
 
@@ -672,6 +705,11 @@ submitForm.addEventListener("submit", async (event) => {
     ageBandSelect.value = ageBand;
     stateSelect.value = stateCode;
     await fillCities(stateCode, city);
+    // submitForm.reset() desmarcaria o checkbox de novo (não tem o
+    // atributo "checked" no HTML) — restaura o estado que acabou de
+    // valer para esse envio.
+    savePrefsCheckbox.checked = savePreferences;
+    state.savedDefaults = data.savedDefaults || null;
     networkDetected.hidden = true;
     enforceMaxChoices("rec-why", "rec-why-hint");
     enforceMaxChoices("rec-desired", "rec-desired-hint");
@@ -786,6 +824,7 @@ document.getElementById("btn-logout").addEventListener("click", () => {
     if (!res.ok) throw new Error("Sessão inválida.");
     const data = await res.json();
     state.tcleAccepted = !!data.tcleAccepted;
+    state.savedDefaults = data.savedDefaults || null;
     showScreen(state.tcleAccepted ? "instructions" : "tcle");
   } catch (err) {
     clearSession();

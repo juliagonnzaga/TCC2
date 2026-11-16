@@ -227,7 +227,7 @@ app.post("/api/participants/register", (req, res) => {
 
   const token = crypto.randomUUID();
   validParticipantTokens.set(token, record.id);
-  res.status(201).json({ token, email: record.email, tcleAccepted: false });
+  res.status(201).json({ token, email: record.email, tcleAccepted: false, savedDefaults: null });
 });
 
 /**
@@ -248,7 +248,12 @@ app.post("/api/participants/login", (req, res) => {
 
   const token = crypto.randomUUID();
   validParticipantTokens.set(token, participant.id);
-  res.json({ token, email: participant.email, tcleAccepted: !!participant.tcleAcceptedAt });
+  res.json({
+    token,
+    email: participant.email,
+    tcleAccepted: !!participant.tcleAcceptedAt,
+    savedDefaults: participant.savedDefaults || null,
+  });
 });
 
 /**
@@ -312,7 +317,11 @@ app.get("/api/participants/me", requireParticipantAuth, (req, res) => {
   if (!participant) {
     return res.status(401).json({ error: "Sessão inválida. Faça login novamente." });
   }
-  res.json({ email: participant.email, tcleAccepted: !!participant.tcleAcceptedAt });
+  res.json({
+    email: participant.email,
+    tcleAccepted: !!participant.tcleAcceptedAt,
+    savedDefaults: participant.savedDefaults || null,
+  });
 });
 
 /**
@@ -410,6 +419,7 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
     ageBand,
     state,
     city,
+    savePreferences,
   } = req.body || {};
 
   if (!link || typeof link !== "string") {
@@ -488,6 +498,19 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
       .json({ error: "É necessário aceitar o TCLE antes de enviar recomendações." });
   }
 
+  // Pedido da Julia: checkbox "Salvar meus dados para a próxima vez" —
+  // guarda idade/estado/cidade na conta pra vir pré-preenchido nos
+  // próximos envios. Desmarcar no envio seguinte para de salvar (apaga
+  // o que tinha sido salvo); não enviar o campo (clientes antigos)
+  // deixa o que já estava salvo como estava.
+  if (savePreferences === true) {
+    participant.savedDefaults = { ageBand, state, city };
+    writeJSON(PARTICIPANTS_FILE, participants);
+  } else if (savePreferences === false && participant.savedDefaults) {
+    participant.savedDefaults = null;
+    writeJSON(PARTICIPANTS_FILE, participants);
+  }
+
   const recommendations = readJSON(RECOMMENDATIONS_FILE);
   const existingForParticipant = recommendations.filter(
     (r) => r.participantId === participant.id
@@ -518,6 +541,7 @@ app.post("/api/recommendations", requireParticipantAuth, (req, res) => {
   res.status(201).json({
     recommendation: record,
     totalForParticipant: existingForParticipant.length + 1,
+    savedDefaults: participant.savedDefaults || null,
   });
 });
 
