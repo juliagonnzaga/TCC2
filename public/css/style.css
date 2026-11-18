@@ -1035,6 +1035,33 @@ textarea {
   margin-bottom: 10px;
 }
 
+.report-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.report-section-head h2 {
+  margin-bottom: 10px;
+}
+
+.word-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px 16px;
+  padding: 20px 10px;
+}
+
+.word-cloud-item {
+  color: var(--color-primary);
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: default;
+}
+
 .bar-row {
   display: grid;
   grid-template-columns: minmax(120px, 180px) 1fr auto;

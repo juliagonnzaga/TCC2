@@ -170,12 +170,17 @@
           </div>
 
           <div class="report-section">
-            <h2>O que elas gostariam de ver no lugar</h2>
+            <div class="report-section-head">
+              <h2>O que elas gostariam de ver no lugar</h2>
+              <button type="button" class="btn-link" id="btn-toggle-desejados-view">Ver como lista</button>
+            </div>
             <p class="map-note">
               Cada registro pode ter até 2 opções, então os percentuais somam
-              mais de 100%.
+              mais de 100%. O tamanho de cada palavra representa o percentual
+              de registros.
             </p>
-            <div id="bars-desejados"></div>
+            <div id="desejados-wordcloud"></div>
+            <div id="bars-desejados" hidden></div>
           </div>
 
           <div class="report-section">

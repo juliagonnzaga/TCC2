@@ -39,6 +39,38 @@ function renderBars(containerId, items, { emptyMessage, totalForPercent } = {}) 
   }
 }
 
+function renderWordCloud(containerId, items, { emptyMessage } = {}) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  if (!items || items.length === 0) {
+    const p = document.createElement("p");
+    p.className = "report-empty";
+    p.textContent = emptyMessage || "Ainda não há dados suficientes.";
+    container.appendChild(p);
+    return;
+  }
+
+  const maxPercent = Math.max(...items.map((item) => item.percent), 1);
+  const cloud = document.createElement("div");
+  cloud.className = "word-cloud";
+  cloud.setAttribute("role", "list");
+
+  for (const item of items) {
+    const weight = Math.sqrt(item.percent / maxPercent);
+    const word = document.createElement("span");
+    word.className = "word-cloud-item";
+    word.setAttribute("role", "listitem");
+    word.style.fontSize = `${14 + weight * 34}px`;
+    word.style.opacity = String(0.45 + weight * 0.55);
+    word.title = `${item.label}: ${item.count} (${item.percent}%)`;
+    word.textContent = item.label;
+    cloud.appendChild(word);
+  }
+
+  container.appendChild(cloud);
+}
+
 function renderColumns(containerId, items, { emptyMessage } = {}) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
@@ -272,6 +304,7 @@ async function loadReport() {
     renderColumns("bars-motivos", data.motivos, { emptyMessage: "Ainda não há registros." });
     renderRecurrenceByMotivo("bars-recorrencia-motivo", data.recorrenciaPorMotivo);
     renderColumns("bars-recorrencia", data.recorrencia, { emptyMessage: "Ainda não há registros." });
+    renderWordCloud("desejados-wordcloud", data.desejados, { emptyMessage: "Ainda não há registros." });
     renderColumns("bars-desejados", data.desejados, { emptyMessage: "Ainda não há registros." });
     document.getElementById("matrix-min-participants").textContent = data.minimoParticipantes;
     renderAgeMatrix(data);
@@ -296,5 +329,15 @@ async function loadReport() {
     errorBox.hidden = false;
   }
 }
+
+document.getElementById("btn-toggle-desejados-view").addEventListener("click", () => {
+  const wordCloud = document.getElementById("desejados-wordcloud");
+  const list = document.getElementById("bars-desejados");
+  const btn = document.getElementById("btn-toggle-desejados-view");
+  const willShowList = wordCloud.hidden === false;
+  wordCloud.hidden = willShowList;
+  list.hidden = !willShowList;
+  btn.textContent = willShowList ? "Ver como nuvem de palavras" : "Ver como lista";
+});
 
 loadReport();
