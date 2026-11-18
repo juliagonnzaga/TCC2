@@ -652,6 +652,79 @@ textarea {
   margin-top: 0;
 }
 
+.modal-box--feedback {
+  max-width: 480px;
+  text-align: left;
+  max-height: 86vh;
+  overflow-y: auto;
+}
+
+.modal-box--feedback h2 {
+  font-size: 20px;
+}
+
+.modal-box--feedback .hint {
+  text-align: left;
+  margin: 10px 0;
+}
+
+.feedback-link-wrap {
+  text-align: center;
+  margin: 20px 0 0;
+}
+
+.feedback-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.feedback-link:hover {
+  color: var(--color-primary);
+}
+
+.feedback-list-wrap {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.feedback-list-wrap h3 {
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+.feedback-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.feedback-item:last-child {
+  border-bottom: none;
+}
+
+.feedback-item-author {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 2px;
+}
+
+.feedback-item-message {
+  font-size: 13.5px;
+  color: var(--color-text);
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* ===================== Painel da pesquisadora (admin) ===================== */
 
 .admin-body {
@@ -1392,4 +1465,38 @@ textarea {
 .report-stat .stat-value.stat-value-text {
   font-size: 15px;
   line-height: 1.3;
+}
+
+.feedback-admin-item {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.feedback-admin-item.is-hidden {
+  opacity: 0.55;
+}
+
+.feedback-admin-item-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+.feedback-admin-item-author {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.feedback-admin-item-message {
+  font-size: 13.5px;
+  color: var(--color-text);
+  margin: 0 0 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
 }

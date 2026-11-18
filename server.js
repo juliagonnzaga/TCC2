@@ -68,6 +68,7 @@ const PARTICIPANTS_FILE = path.join(DATA_DIR, "participants.json");
 const RECOMMENDATIONS_FILE = path.join(DATA_DIR, "recommendations.json");
 const CATEGORIZATIONS_FILE = path.join(DATA_DIR, "categorizations.json");
 const SUS_FILE = path.join(DATA_DIR, "sus.json");
+const FEEDBACK_FILE = path.join(DATA_DIR, "feedback.json");
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 for (const file of [
@@ -75,6 +76,7 @@ for (const file of [
   RECOMMENDATIONS_FILE,
   CATEGORIZATIONS_FILE,
   SUS_FILE,
+  FEEDBACK_FILE,
 ]) {
   if (!fs.existsSync(file)) fs.writeFileSync(file, "[]");
 }
@@ -1141,6 +1143,82 @@ app.get("/api/public/report", (req, res) => {
       recorrencia: RECURRENCE_OPTIONS,
     },
   });
+});
+
+const MAX_FEEDBACK_MESSAGE_LENGTH = 1000;
+const MAX_FEEDBACK_NAME_LENGTH = 60;
+
+app.post("/api/feedback", requireParticipantAuth, (req, res) => {
+  const { message, displayName } = req.body || {};
+  const messageText = typeof message === "string" ? message.trim() : "";
+  if (!messageText || messageText.length > MAX_FEEDBACK_MESSAGE_LENGTH) {
+    return res
+      .status(400)
+      .json({ error: `Escreva um comentário de até ${MAX_FEEDBACK_MESSAGE_LENGTH} caracteres.` });
+  }
+  const nameText = typeof displayName === "string" ? displayName.trim() : "";
+  if (nameText.length > MAX_FEEDBACK_NAME_LENGTH) {
+    return res.status(400).json({ error: `O nome pode ter até ${MAX_FEEDBACK_NAME_LENGTH} caracteres.` });
+  }
+
+  const participants = readJSON(PARTICIPANTS_FILE);
+  const participant = participants.find((p) => p.id === req.participantId);
+  if (!participant) {
+    return res.status(401).json({ error: "Sessão inválida. Faça login novamente." });
+  }
+
+  const feedback = readJSON(FEEDBACK_FILE);
+  const record = {
+    id: crypto.randomUUID(),
+    participantId: participant.id,
+    code: participant.code,
+    displayName: nameText || null,
+    message: messageText,
+    hidden: false,
+    createdAt: new Date().toISOString(),
+  };
+  feedback.push(record);
+  writeJSON(FEEDBACK_FILE, feedback);
+
+  res.status(201).json({
+    feedback: {
+      id: record.id,
+      displayName: record.displayName,
+      message: record.message,
+      createdAt: record.createdAt,
+    },
+  });
+});
+
+app.get("/api/feedback/public", (req, res) => {
+  const items = readJSON(FEEDBACK_FILE)
+    .filter((item) => !item.hidden)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .map((item) => ({
+      id: item.id,
+      displayName: item.displayName,
+      message: item.message,
+      createdAt: item.createdAt,
+    }));
+  res.json({ items, total: items.length });
+});
+
+app.get("/api/feedback", requireAuth, (req, res) => {
+  const items = readJSON(FEEDBACK_FILE).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  res.json({ items });
+});
+
+app.post("/api/feedback/:id/hide", requireAuth, (req, res) => {
+  const { id } = req.params;
+  const { hidden } = req.body || {};
+  const feedback = readJSON(FEEDBACK_FILE);
+  const idx = feedback.findIndex((item) => item.id === id);
+  if (idx === -1) {
+    return res.status(404).json({ error: "Comentário não encontrado." });
+  }
+  feedback[idx].hidden = hidden === true;
+  writeJSON(FEEDBACK_FILE, feedback);
+  res.status(200).json({ id: feedback[idx].id, hidden: feedback[idx].hidden });
 });
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));

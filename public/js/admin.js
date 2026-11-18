@@ -30,6 +30,7 @@ function showAdminView(name) {
   document.getElementById("admin-view-categorize").hidden = name !== "categorize";
   document.getElementById("admin-view-indicators").hidden = name !== "indicators";
   document.getElementById("admin-view-usability").hidden = name !== "usability";
+  document.getElementById("admin-view-feedback").hidden = name !== "feedback";
   document.querySelectorAll(".admin-tab[data-tab]").forEach((btn) => {
     btn.classList.toggle("is-active", btn.dataset.tab === name);
   });
@@ -165,6 +166,10 @@ document.getElementById("tab-indicators").addEventListener("click", () => {
 document.getElementById("tab-usability").addEventListener("click", () => {
   showAdminView("usability");
   loadUsability();
+});
+document.getElementById("tab-feedback").addEventListener("click", () => {
+  showAdminView("feedback");
+  loadFeedbackAdmin();
 });
 
 /* ---------- Fila de submissões ---------- */
@@ -448,6 +453,66 @@ async function loadUsability() {
       <td>${date}</td>
     `;
     responsesBody.appendChild(tr);
+  });
+}
+
+/* ---------- Feedback e sugestões ---------- */
+
+async function loadFeedbackAdmin() {
+  const res = await fetch("/api/feedback", { headers: authHeaders() });
+  if (res.status === 401) return showAdminScreen("login");
+  const data = await res.json();
+
+  const list = document.getElementById("feedback-admin-list");
+  const emptyMsg = document.getElementById("feedback-admin-empty");
+  list.innerHTML = "";
+  emptyMsg.hidden = data.items.length > 0;
+
+  data.items.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "feedback-admin-item";
+    if (item.hidden) row.classList.add("is-hidden");
+
+    const top = document.createElement("div");
+    top.className = "feedback-admin-item-top";
+
+    const author = document.createElement("span");
+    author.className = "feedback-admin-item-author";
+    author.textContent = `${item.displayName || "Anônima"} · ${item.code}`;
+
+    const date = document.createElement("span");
+    date.className = "feedback-admin-item-date";
+    date.textContent = new Date(item.createdAt).toLocaleString("pt-BR");
+
+    top.appendChild(author);
+    top.appendChild(date);
+
+    const message = document.createElement("p");
+    message.className = "feedback-admin-item-message";
+    message.textContent = item.message;
+
+    const toggleBtn = document.createElement("button");
+    toggleBtn.type = "button";
+    toggleBtn.className = "btn-link";
+    toggleBtn.textContent = item.hidden ? "Mostrar no mural público" : "Ocultar do mural público";
+    toggleBtn.addEventListener("click", async () => {
+      toggleBtn.disabled = true;
+      try {
+        await fetch(`/api/feedback/${item.id}/hide`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify({ hidden: !item.hidden }),
+        });
+        loadFeedbackAdmin();
+      } finally {
+        toggleBtn.disabled = false;
+      }
+    });
+
+    row.appendChild(top);
+    row.appendChild(message);
+    row.appendChild(toggleBtn);
+    list.appendChild(row);
   });
 }
 

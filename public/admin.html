@@ -93,6 +93,7 @@
         <button class="admin-tab" id="tab-queue" data-tab="queue">Fila de submissões</button>
         <button class="admin-tab" id="tab-indicators" data-tab="indicators">Indicadores</button>
         <button class="admin-tab" id="tab-usability" data-tab="usability">Usabilidade (SUS)</button>
+        <button class="admin-tab" id="tab-feedback" data-tab="feedback">Feedback</button>
         <button class="admin-tab admin-tab-ghost" id="btn-logout">Sair</button>
       </nav>
     </header>
@@ -291,6 +292,18 @@
         </thead>
         <tbody id="sus-responses-tbody"></tbody>
       </table>
+    </section>
+
+    <section id="admin-view-feedback" class="admin-view" hidden>
+      <h1>Feedback e sugestões</h1>
+      <p class="lead">
+        Comentários enviados pelo link "Feedback e sugestões" no rodapé da
+        página de resultados. Só participantes logadas podem comentar, para
+        evitar spam; "ocultar" tira um comentário do mural público sem
+        apagá-lo.
+      </p>
+      <div id="feedback-admin-list"></div>
+      <p class="hint" id="feedback-admin-empty" hidden>Nenhum comentário ainda.</p>
     </section>
   </div>
 
