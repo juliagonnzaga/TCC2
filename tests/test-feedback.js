@@ -36,30 +36,33 @@ async function apiChecks() {
   const vazio = await call("POST", "/api/feedback", { message: "" }, participante.token);
   assert(vazio.status === 400, "comentário vazio deve ser rejeitado");
 
-  const comNome = await call(
+  const comentario1 = await call(
     "POST",
     "/api/feedback",
-    { message: "Adorei o mapa, ficou bem mais claro agora!", displayName: "Fulana" },
+    { message: "Adorei o mapa, ficou bem mais claro agora!" },
     participante.token
   );
-  assert(comNome.status === 201, "comentário válido com nome deve ser aceito");
-  assert(comNome.data.feedback.displayName === "Fulana", "nome enviado deve ser preservado");
+  assert(comentario1.status === 201, "comentário válido deve ser aceito");
+  assert(comentario1.data.feedback.email === participante.email, "comentário deve trazer o e-mail de quem comentou");
 
-  const anonimo = await call(
+  const comentario2 = await call(
     "POST",
     "/api/feedback",
     { message: "Essa parte do formulário poderia ser mais curta." },
     participante.token
   );
-  assert(anonimo.status === 201, "comentário sem nome deve ser aceito");
-  assert(anonimo.data.feedback.displayName === null, "sem nome enviado, displayName deve ser null");
+  assert(comentario2.status === 201, "segundo comentário também deve ser aceito");
 
   const publico = await call("GET", "/api/feedback/public");
   assert(publico.status === 200, "listagem pública deve responder 200");
   assert(publico.data.items.length === 2, "os 2 comentários enviados devem aparecer na listagem pública");
   const publicoRaw = JSON.stringify(publico.data);
-  assert(!publicoRaw.includes(participante.email), "e-mail da participante não pode vazar na listagem pública");
+  assert(publicoRaw.includes(participante.email), "e-mail da participante deve aparecer na listagem pública");
   assert(!publicoRaw.includes(participante.token), "token não pode vazar na listagem pública");
+  assert(
+    publico.data.items.every((item) => typeof item.createdAt === "string"),
+    "cada comentário deve trazer a data/hora do envio"
+  );
 
   const semAuthAdmin = await call("GET", "/api/feedback");
   assert(semAuthAdmin.status === 401, "listagem completa deve exigir login da pesquisadora");
@@ -69,10 +72,14 @@ async function apiChecks() {
   assert(listaAdmin.data.items.length === 2, "painel da pesquisadora deve ver todos os comentários");
   assert(
     listaAdmin.data.items.every((item) => typeof item.code === "string" && /^P\d+$/.test(item.code)),
-    "painel deve conseguir identificar o código interno de quem comentou (sem mostrar e-mail)"
+    "painel deve conseguir identificar o código interno de quem comentou"
+  );
+  assert(
+    listaAdmin.data.items.every((item) => item.email === participante.email),
+    "painel da pesquisadora deve ver o e-mail de quem comentou"
   );
 
-  const itemParaOcultar = comNome.data.feedback.id;
+  const itemParaOcultar = comentario1.data.feedback.id;
   const ocultar = await call(
     "POST",
     `/api/feedback/${itemParaOcultar}/hide`,
@@ -113,42 +120,13 @@ async function uiCheck() {
   await page.click("#feedback-register-form button[type=submit]");
 
   await page.waitForSelector("#feedback-compose:not([hidden])", { timeout: 10000 });
-  await page.fill("#feedback-display-name", "Testadora UI");
   await page.fill("#feedback-message", "Comentário enviado pelo teste automatizado.");
   await page.click("#feedback-form button[type=submit]");
 
   await page.waitForSelector("#feedback-success:not([hidden])", { timeout: 10000 });
   const listText = await page.locator("#feedback-list").innerText();
-  assert(listText.includes("Testadora UI"), "comentário enviado pela UI deve aparecer no mural");
   assert(listText.includes("Comentário enviado pelo teste automatizado."), "texto do comentário deve aparecer");
-
-  await page.fill("#feedback-display-name", "Nome que não deveria ser enviado");
-  await page.check("#feedback-anonymous");
-  assert(
-    await page.locator("#feedback-display-name").inputValue() === "",
-    "marcar anônima deve limpar o campo nome"
-  );
-  assert(
-    await page.locator("#feedback-display-name").isDisabled(),
-    "marcar anônima deve bloquear o campo nome"
-  );
-  await page.fill("#feedback-message", "Comentário anônimo enviado pelo teste automatizado.");
-  await page.click("#feedback-form button[type=submit]");
-  await page.waitForSelector("#feedback-success:not([hidden])", { timeout: 10000 });
-  const listTextAnon = await page.locator("#feedback-list").innerText();
-  assert(
-    listTextAnon.includes("Comentário anônimo enviado pelo teste automatizado."),
-    "comentário anônimo deve aparecer no mural"
-  );
-  assert(
-    !listTextAnon.includes("Nome que não deveria ser enviado"),
-    "nome digitado antes de marcar anônima não pode ser enviado"
-  );
-  assert(listTextAnon.includes("Anônima"), "comentário marcado como anônimo deve aparecer como Anônima");
-  assert(
-    !(await page.locator("#feedback-display-name").isDisabled()),
-    "campo nome deve voltar a ficar liberado após enviar"
-  );
+  assert(listText.includes(email), "e-mail da participante deve aparecer junto do comentário");
 
   await browser.close();
   console.log("ok - fluxo da UI (modal, cadastro inline, envio e mural) funcionou de ponta a ponta");

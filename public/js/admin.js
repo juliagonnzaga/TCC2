@@ -478,7 +478,7 @@ async function loadFeedbackAdmin() {
 
     const author = document.createElement("span");
     author.className = "feedback-admin-item-author";
-    author.textContent = `${item.displayName || "Anônima"} · ${item.code}`;
+    author.textContent = `${item.email} · ${item.code}`;
 
     const date = document.createElement("span");
     date.className = "feedback-admin-item-date";

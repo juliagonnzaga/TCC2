@@ -1146,19 +1146,14 @@ app.get("/api/public/report", (req, res) => {
 });
 
 const MAX_FEEDBACK_MESSAGE_LENGTH = 1000;
-const MAX_FEEDBACK_NAME_LENGTH = 60;
 
 app.post("/api/feedback", requireParticipantAuth, (req, res) => {
-  const { message, displayName } = req.body || {};
+  const { message } = req.body || {};
   const messageText = typeof message === "string" ? message.trim() : "";
   if (!messageText || messageText.length > MAX_FEEDBACK_MESSAGE_LENGTH) {
     return res
       .status(400)
       .json({ error: `Escreva um comentário de até ${MAX_FEEDBACK_MESSAGE_LENGTH} caracteres.` });
-  }
-  const nameText = typeof displayName === "string" ? displayName.trim() : "";
-  if (nameText.length > MAX_FEEDBACK_NAME_LENGTH) {
-    return res.status(400).json({ error: `O nome pode ter até ${MAX_FEEDBACK_NAME_LENGTH} caracteres.` });
   }
 
   const participants = readJSON(PARTICIPANTS_FILE);
@@ -1172,7 +1167,7 @@ app.post("/api/feedback", requireParticipantAuth, (req, res) => {
     id: crypto.randomUUID(),
     participantId: participant.id,
     code: participant.code,
-    displayName: nameText || null,
+    email: participant.email,
     message: messageText,
     hidden: false,
     createdAt: new Date().toISOString(),
@@ -1183,7 +1178,7 @@ app.post("/api/feedback", requireParticipantAuth, (req, res) => {
   res.status(201).json({
     feedback: {
       id: record.id,
-      displayName: record.displayName,
+      email: record.email,
       message: record.message,
       createdAt: record.createdAt,
     },
@@ -1196,7 +1191,7 @@ app.get("/api/feedback/public", (req, res) => {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .map((item) => ({
       id: item.id,
-      displayName: item.displayName,
+      email: item.email,
       message: item.message,
       createdAt: item.createdAt,
     }));

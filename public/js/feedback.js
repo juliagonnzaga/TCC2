@@ -7,8 +7,6 @@ const feedbackList = document.getElementById("feedback-list");
 const feedbackRegisterForm = document.getElementById("feedback-register-form");
 const feedbackLoginForm = document.getElementById("feedback-login-form");
 const feedbackForm = document.getElementById("feedback-form");
-const feedbackDisplayNameInput = document.getElementById("feedback-display-name");
-const feedbackAnonymousCheckbox = document.getElementById("feedback-anonymous");
 
 const feedbackBtnShowLogin = document.getElementById("feedback-btn-show-login");
 const feedbackBtnShowRegister = document.getElementById("feedback-btn-show-register");
@@ -19,6 +17,11 @@ function feedbackToken() {
 
 function feedbackEmail() {
   return localStorage.getItem("participantEmail");
+}
+
+function formatFeedbackDate(isoString) {
+  const date = new Date(isoString);
+  return date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
 function showFeedbackError(id, message) {
@@ -73,7 +76,7 @@ async function loadFeedbackList() {
 
       const author = document.createElement("p");
       author.className = "feedback-item-author";
-      author.textContent = item.displayName || "Anônima";
+      author.textContent = `${item.email || "Participante"} · ${formatFeedbackDate(item.createdAt)}`;
 
       const message = document.createElement("p");
       message.className = "feedback-item-message";
@@ -100,15 +103,6 @@ document.getElementById("btn-close-feedback").addEventListener("click", () => {
 
 feedbackModal.addEventListener("click", (event) => {
   if (event.target === feedbackModal) feedbackModal.hidden = true;
-});
-
-feedbackAnonymousCheckbox.addEventListener("change", () => {
-  if (feedbackAnonymousCheckbox.checked) {
-    feedbackDisplayNameInput.value = "";
-    feedbackDisplayNameInput.disabled = true;
-  } else {
-    feedbackDisplayNameInput.disabled = false;
-  }
 });
 
 feedbackBtnShowLogin.addEventListener("click", () => {
@@ -181,8 +175,6 @@ feedbackForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   hideFeedbackError("feedback-error");
   document.getElementById("feedback-success").hidden = true;
-  const isAnonymous = feedbackAnonymousCheckbox.checked;
-  const displayName = isAnonymous ? "" : feedbackDisplayNameInput.value.trim();
   const message = document.getElementById("feedback-message").value.trim();
   const btn = feedbackForm.querySelector("button[type=submit]");
   btn.disabled = true;
@@ -190,7 +182,7 @@ feedbackForm.addEventListener("submit", async (event) => {
     const res = await fetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${feedbackToken()}` },
-      body: JSON.stringify({ message, displayName: displayName || null }),
+      body: JSON.stringify({ message }),
     });
     if (res.status === 401) {
       await refreshFeedbackAuthState();
@@ -199,7 +191,6 @@ feedbackForm.addEventListener("submit", async (event) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Não foi possível enviar seu comentário agora.");
     feedbackForm.reset();
-    feedbackDisplayNameInput.disabled = false;
     document.getElementById("feedback-success").hidden = false;
     loadFeedbackList();
   } catch (err) {
