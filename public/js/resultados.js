@@ -62,7 +62,7 @@ function renderWordCloud(containerId, items, { emptyMessage } = {}) {
     word.className = "word-cloud-item";
     word.setAttribute("role", "listitem");
     word.setAttribute("tabindex", "0");
-    word.style.fontSize = `${14 + weight * 34}px`;
+    word.style.fontSize = `${14 + weight * 22}px`;
     word.style.opacity = String(0.45 + weight * 0.55);
     word.dataset.tip = `${item.count} ${item.count === 1 ? "registro" : "registros"} · ${item.percent}%`;
     word.textContent = item.label;
